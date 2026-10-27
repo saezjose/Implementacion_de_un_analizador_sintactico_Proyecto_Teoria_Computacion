@@ -1,0 +1,4 @@
+# Sin dependencias externas obligatorias
+# Solo se usa librería estándar de Python
+# Opcional para desarrollo:
+# pytest>=7.0.0

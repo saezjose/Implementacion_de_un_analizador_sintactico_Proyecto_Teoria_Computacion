@@ -1,0 +1,5 @@
+WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
+WHEN luz == 0 OR movimiento == TRUE THEN encender luces, alarma = 1 ELSE apagar luces;
+WHEN NOT puerta_abierta THEN activar_alarma;
+WHEN nivel_agua >= 80 THEN bomba = 1, notificar_app;
+WHEN presion < 10 AND NOT emergencia THEN abrir_valvula;
