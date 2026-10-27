@@ -679,4 +679,77 @@ python -m unittest discover -s tests -v
 <AsigOrCall>    ::= IGUAL <Factor> | <Factor> | ε
 \end{lstlisting}
 
+
+
+
+\newpage
+\subsection{Anexo D: Derivación por la Izquierda}
+
+\subsubsection{Objetivo}
+Demostrar la derivación por la izquierda para la siguiente sentencia válida del lenguaje \textit{SmartRule}:
+
+\begin{lstlisting}[style=grammartyle]
+WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
+\end{lstlisting}
+
+\subsubsection{Gramática utilizada}
+Se utiliza la gramática LL(1) definida en el Anexo C. Para mayor claridad, se listan las producciones relevantes:
+
+\begin{align}
+Prog        &\to Regla\ Prog \mid \epsilon\\
+Regla       &\to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\\
+ElsePart    &\to ELSE\ ListaAcciones \mid \epsilon\\
+Cond        &\to OrExpr\\
+OrExpr      &\to AndExpr\ OrTail\\
+OrTail      &\to OR\ AndExpr\ OrTail \mid \epsilon\\
+AndExpr     &\to NotExpr\ AndTail\\
+AndTail     &\to AND\ NotExpr\ AndTail \mid \epsilon\\
+NotExpr     &\to RelExpr\\
+RelExpr     &\to Factor\ RelExprTail\\
+RelExprTail &\to OP\_REL\ Factor \mid \epsilon\\
+Factor      &\to NUM \mid ID \mid TRUE \mid FALSE\\
+ListaAcciones &\to Accion\ AccionTail\\
+AccionTail    &\to COMA\ Accion\ AccionTail \mid \epsilon\\
+Accion        &\to ID\ AsigOrCall \mid ID\ ID\ IGUAL\ Factor\\
+AsigOrCall    &\to IGUAL\ Factor \mid Factor \mid \epsilon
+\end{align}
+
+\subsubsection{Derivación por la izquierda}
+Símbolo inicial: $Prog$
+
+\begin{enumerate}[leftmargin=1cm]
+\item $Prog \underset{lm}{\Rightarrow} Regla\ Prog$ (por $Prog \to Regla\ Prog$)
+\item $Regla\ Prog \underset{lm}{\Rightarrow} WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Regla \to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA$)
+\item $WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ OrExpr\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Cond \to OrExpr$)
+\item $WHEN\ OrExpr\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ AndExpr\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $OrExpr \to AndExpr\ OrTail$)
+\item $WHEN\ AndExpr\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AndExpr \to NotExpr\ AndTail$)
+\item $WHEN\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $NotExpr \to RelExpr$)
+\item $WHEN\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExpr \to Factor\ RelExprTail$)
+\item $WHEN\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{temperatura})
+\item $WHEN\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExprTail \to OP\_REL\ Factor$, \texttt{>})
+\item $WHEN\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to NUM$, \texttt{28})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AndTail \to AND\ NotExpr\ AndTail$)
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $NotExpr \to RelExpr$)
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExpr \to Factor\ RelExprTail$)
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{humedad})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExprTail \to OP\_REL\ Factor$, \texttt{<})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to NUM$, \texttt{40})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ \epsilon\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \equiv WHEN\ temperatura > 28\ AND\ humedad < 40\ OrTail\ THEN\ ...$ (por $AndTail \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ \epsilon\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $OrTail \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ Accion\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $ListaAcciones \to Accion\ AccionTail$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ Accion\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ AsigOrCall\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Accion \to ID\ AsigOrCall$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ AsigOrCall\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ Factor\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AsigOrCall \to Factor$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ Factor\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ ID\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{ventilador})
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ ID\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ \epsilon\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AccionTail \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ \epsilon\ PUNTO\_COMA\ Prog$ (por $ElsePart \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador;\ \epsilon$ (por $Prog \to \epsilon$)
+\end{enumerate}
+
+\subsubsection{Cadena derivada}
+\[
+WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador;
+\]
+
+Por consiguiente, se demuestra que la sentencia pertenece al lenguaje generado por la gramática $G_{SmartRule}$ mediante derivación por la izquierda.
+
 \end{document}
