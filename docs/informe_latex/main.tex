@@ -515,23 +515,27 @@ Se diseñó una batería de pruebas completa para validar tanto el análisis lé
 \end{table}
 
 \subsection{Resultados de las Pruebas}
-Las pruebas fueron ejecutadas con \texttt{pytest}, obteniendo el siguiente resultado:
+Las pruebas fueron ejecutadas con \texttt{unittest}, obteniendo el siguiente resultado:
 
-\begin{lstlisting}[style=grammartyle, caption={Resultado de ejecución de pruebas}]
-============================= test session starts ==============================
-platform win32 -- Python 3.14.x
-collected 26 items
-
-tests/test_integracion.py ..........                                    [ 23%]
-tests/test_lexer.py .....                                                [ 42%]
-tests/test_parser.py ...............                                     [ 100%]
-
-============================== 26 passed in 0.XXs ==============================
-\end{lstlisting}
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{imagenes/resultado_pruebas.png}
+\caption{Resultado de ejecución de las pruebas automatizadas (26 tests OK)}
+\label{fig:resultado_pruebas}
+\end{figure}
 
 \textbf{Resultado:} \texttt{26 passed} – Todas las pruebas pasaron exitosamente, incluyendo el caso de integración \texttt{test\_casa\_inteligente\_completo} con la forma \texttt{encender luces = 100}.
 
 \subsection{Ejemplo de Salida del Analizador}
+Al analizar el archivo \texttt{ejemplos/validos\_1.sr}, el sistema confirma el éxito del análisis léxico, sintáctico y muestra los tokens y el AST:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{imagenes/ejecucion_analizador.png}
+\caption{Ejecución del analizador con salida de tokens y AST}
+\label{fig:ejecucion_analizador}
+\end{figure}
+
 Al analizar un archivo válido, el sistema confirma el éxito del análisis y muestra el AST:
 
 \begin{lstlisting}[style=grammartyle, caption={Salida exitosa del analizador}]
