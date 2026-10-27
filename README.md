@@ -1,4 +1,4 @@
-# Analizador Sintáctico para DSL "SmartRule"
+# Analizador Sintáctico para DSL "SmartRule" a
 
 Proyecto de Teoría de la Computación - Analizador Léxico y Sintáctico LL(1)
 
