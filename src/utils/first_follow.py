@@ -2,7 +2,19 @@
 Cálculo de conjuntos FIRST y FOLLOW para la gramática SmartRule
 """
 
-from src.gramatica import GRAMATICA, TERMINALES, NO_TERMINALES, SIMBOLO_INICIAL
+from src.gramatica import GRAMATICA, TERMINALES, NO_TERMINALES, SIMBOLO_INICIAL, EPSILON
+
+
+def es_terminal(sym):
+    return sym in TERMINALES
+
+
+def es_no_terminal(sym):
+    return sym in NO_TERMINALES
+
+
+def es_epsilon(sym):
+    return sym == EPSILON
 
 
 def calcular_first():
@@ -13,35 +25,40 @@ def calcular_first():
         changed = False
         for nt, producciones in GRAMATICA.items():
             for prod in producciones:
-                if not prod or prod == ['ε']:
-                    if 'ε' not in first[nt]:
-                        first[nt].add('ε')
+                if not prod or prod == [EPSILON]:
+                    if EPSILON not in first[nt]:
+                        first[nt].add(EPSILON)
                         changed = True
                     continue
                 
                 # Procesar símbolos de la producción
                 for i, sym in enumerate(prod):
-                    if sym in TERMINALES:
-                        if sym != 'ε' and sym not in first[nt]:
+                    if es_terminal(sym):
+                        if not es_epsilon(sym) and sym not in first[nt]:
                             first[nt].add(sym)
                             changed = True
                         break
-                    elif sym in NO_TERMINALES:
+                    elif es_no_terminal(sym):
                         # Añadir FIRST(sym) - {ε}
                         before = len(first[nt])
                         for f in first[sym]:
-                            if f != 'ε':
+                            if not es_epsilon(f):
                                 first[nt].add(f)
                         if len(first[nt]) != before:
                             changed = True
                         # Si FIRST(sym) no contiene ε, parar
-                        if 'ε' not in first[sym]:
+                        if EPSILON not in first[sym]:
                             break
                         # Si es el último símbolo y todos contienen ε
                         if i == len(prod) - 1:
-                            if 'ε' not in first[nt]:
-                                first[nt].add('ε')
+                            if EPSILON not in first[nt]:
+                                first[nt].add(EPSILON)
                                 changed = True
+                    elif es_epsilon(sym):
+                        if EPSILON not in first[nt]:
+                            first[nt].add(EPSILON)
+                            changed = True
+                        break
                     else:
                         # Símbolo desconocido
                         if sym not in first[nt]:
@@ -57,7 +74,7 @@ def calcular_follow(first=None):
     
     follow = {nt: set() for nt in NO_TERMINALES}
     # Símbolo inicial
-    follow['Prog'].add('$')
+    follow[SIMBOLO_INICIAL].add('$')
     
     changed = True
     while changed:
@@ -65,7 +82,7 @@ def calcular_follow(first=None):
         for nt, producciones in GRAMATICA.items():
             for prod in producciones:
                 for i, sym in enumerate(prod):
-                    if sym in NO_TERMINALES:
+                    if es_no_terminal(sym):
                         # Símbolos después de sym
                         rest = prod[i+1:]
                         if not rest:
@@ -75,50 +92,37 @@ def calcular_follow(first=None):
                             if len(follow[sym]) != before:
                                 changed = True
                         else:
-                            # Calcular FIRST(rest)
+                            # Calcular si toda la cola puede derivar ε
+                            cola_puede_eps = True
                             first_rest = set()
-                            all_eps = True
                             for s2 in rest:
-                                if s2 in TERMINALES:
-                                    if s2 != 'ε':
-                                        first_rest.add(s2)
-                                    all_eps = (s2 == 'ε')
+                                if es_epsilon(s2):
+                                    continue
+                                if es_terminal(s2):
+                                    first_rest.add(s2)
+                                    cola_puede_eps = False
                                     break
-                                elif s2 in NO_TERMINALES:
+                                elif es_no_terminal(s2):
                                     for f in first[s2]:
-                                        if f != 'ε':
+                                        if not es_epsilon(f):
                                             first_rest.add(f)
-                                    if 'ε' not in first[s2]:
-                                        all_eps = False
+                                    if EPSILON not in first[s2]:
+                                        cola_puede_eps = False
                                         break
                                 else:
                                     first_rest.add(s2)
-                                    all_eps = False
+                                    cola_puede_eps = False
                                     break
                             # Añadir FIRST(rest) a FOLLOW(sym)
                             before = len(follow[sym])
                             follow[sym].update(first_rest)
                             if len(follow[sym]) != before:
                                 changed = True
-                            # Si todos pueden derivar ε
-                            if all_eps and 'ε' in ''.join(str(x) for x in rest) if False else True:
-                                # Verificar si toda la cola puede generar ε
-                                cola_puede_eps = True
-                                for s2 in rest:
-                                    if s2 in TERMINALES and s2 != 'ε':
-                                        cola_puede_eps = False
-                                        break
-                                    elif s2 in NO_TERMINALES and 'ε' not in first[s2]:
-                                        cola_puede_eps = False
-                                        break
-                                    elif s2 not in TERMINALES and s2 not in NO_TERMINALES:
-                                        cola_puede_eps = False
-                                        break
-                                if cola_puede_eps:
-                                    before = len(follow[sym])
-                                    follow[sym].update(follow[nt])
-                                    if len(follow[sym]) != before:
-                                        changed = True
+                            if cola_puede_eps:
+                                before = len(follow[sym])
+                                follow[sym].update(follow[nt])
+                                if len(follow[sym]) != before:
+                                    changed = True
     return follow
 
 
@@ -130,58 +134,74 @@ def mostrar_first_follow():
     print("CONJUNTOS FIRST")
     print("=" * 60)
     for nt in sorted(NO_TERMINALES):
-        elems = sorted([e if e != 'ε' else 'epsilon' for e in first[nt]])
+        elems = sorted([e if e != EPSILON else 'epsilon' for e in first[nt]])
         print(f"FIRST({nt}) = {{ {', '.join(elems)} }}")
     
     print("\n" + "=" * 60)
     print("CONJUNTOS FOLLOW")
     print("=" * 60)
     for nt in sorted(NO_TERMINALES):
-        elems = sorted([e if e != 'ε' else 'epsilon' for e in follow[nt]])
+        elems = []
+        for e in sorted(follow[nt]):
+            if e == '$':
+                elems.append('$')
+            elif e == EPSILON:
+                elems.append('epsilon')
+            else:
+                elems.append(e)
         print(f"FOLLOW({nt}) = {{ {', '.join(elems)} }}")
     
     return first, follow
 
 
-def construir_tabla_ll1():
+def construir_tabla_ll1(gramatica=None, terminales=None, no_terminales=None):
+    if gramatica is None:
+        gramatica = GRAMATICA
+    if terminales is None:
+        terminales = TERMINALES
+    if no_terminales is None:
+        no_terminales = NO_TERMINALES
+    
     first = calcular_first()
     follow = calcular_follow(first)
     
     tabla = {}
     conflictos = []
     
-    for nt, producciones in GRAMATICA.items():
+    for nt, producciones in gramatica.items():
         for i, prod in enumerate(producciones):
             # Calcular FIRST de la producción
             first_prod = set()
-            if not prod or prod == ['ε']:
-                first_prod = {'ε'}
+            if not prod or prod == [EPSILON]:
+                first_prod = {EPSILON}
             else:
                 all_eps = True
                 for sym in prod:
-                    if sym in TERMINALES:
-                        if sym == 'ε':
+                    if sym in terminales:
+                        if sym == EPSILON:
                             continue
                         first_prod.add(sym)
                         all_eps = False
                         break
-                    elif sym in NO_TERMINALES:
+                    elif sym in no_terminales:
                         for f in first[sym]:
-                            if f != 'ε':
+                            if f != EPSILON:
                                 first_prod.add(f)
-                        if 'ε' not in first[sym]:
+                        if EPSILON not in first[sym]:
                             all_eps = False
                             break
+                    elif sym == EPSILON:
+                        continue
                     else:
                         first_prod.add(sym)
                         all_eps = False
                         break
                 if all_eps:
-                    first_prod.add('ε')
+                    first_prod.add(EPSILON)
             
             # Para cada terminal en FIRST(prod)
             for a in first_prod:
-                if a != 'ε':
+                if a != EPSILON:
                     key = (nt, a)
                     if key in tabla:
                         conflictos.append({
@@ -195,7 +215,7 @@ def construir_tabla_ll1():
                     tabla[key] = prod
             
             # Si ε está en FIRST(prod), añadir para FOLLOW(nt)
-            if 'ε' in first_prod:
+            if EPSILON in first_prod:
                 for b in follow[nt]:
                     key = (nt, b)
                     if key in tabla:
