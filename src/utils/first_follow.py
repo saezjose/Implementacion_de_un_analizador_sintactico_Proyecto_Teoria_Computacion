@@ -1,7 +1,8 @@
 """
-Cálculo de conjuntos FIRST y FOLLOW para la gramática SmartRule
+Verificación de la gramática LL(1) para SmartRule
 """
 
+import sys
 from src.gramatica import GRAMATICA, TERMINALES, NO_TERMINALES, SIMBOLO_INICIAL, EPSILON
 
 
@@ -31,40 +32,36 @@ def calcular_first():
                         changed = True
                     continue
                 
-                # Procesar símbolos de la producción
-                for i, sym in enumerate(prod):
+                all_eps = True
+                for sym in prod:
+                    if sym == EPSILON:
+                        continue
                     if es_terminal(sym):
-                        if not es_epsilon(sym) and sym not in first[nt]:
-                            first[nt].add(sym)
-                            changed = True
-                        break
-                    elif es_no_terminal(sym):
-                        # Añadir FIRST(sym) - {ε}
-                        before = len(first[nt])
-                        for f in first[sym]:
-                            if not es_epsilon(f):
-                                first[nt].add(f)
-                        if len(first[nt]) != before:
-                            changed = True
-                        # Si FIRST(sym) no contiene ε, parar
-                        if EPSILON not in first[sym]:
-                            break
-                        # Si es el último símbolo y todos contienen ε
-                        if i == len(prod) - 1:
-                            if EPSILON not in first[nt]:
-                                first[nt].add(EPSILON)
-                                changed = True
-                    elif es_epsilon(sym):
-                        if EPSILON not in first[nt]:
-                            first[nt].add(EPSILON)
-                            changed = True
-                        break
-                    else:
-                        # Símbolo desconocido
                         if sym not in first[nt]:
                             first[nt].add(sym)
                             changed = True
+                        all_eps = False
                         break
+                    elif es_no_terminal(sym):
+                        before = len(first[nt])
+                        for f in first[sym]:
+                            if f != EPSILON:
+                                first[nt].add(f)
+                        if len(first[nt]) != before:
+                            changed = True
+                        if EPSILON not in first[sym]:
+                            all_eps = False
+                            break
+                    else:
+                        if sym not in first[nt]:
+                            first[nt].add(sym)
+                            changed = True
+                        all_eps = False
+                        break
+                if all_eps:
+                    if EPSILON not in first[nt]:
+                        first[nt].add(EPSILON)
+                        changed = True
     return first
 
 
@@ -73,7 +70,6 @@ def calcular_follow(first=None):
         first = calcular_first()
     
     follow = {nt: set() for nt in NO_TERMINALES}
-    # Símbolo inicial
     follow[SIMBOLO_INICIAL].add('$')
     
     changed = True
@@ -83,20 +79,17 @@ def calcular_follow(first=None):
             for prod in producciones:
                 for i, sym in enumerate(prod):
                     if es_no_terminal(sym):
-                        # Símbolos después de sym
                         rest = prod[i+1:]
                         if not rest:
-                            # Añadir FOLLOW(nt) a FOLLOW(sym)
                             before = len(follow[sym])
                             follow[sym].update(follow[nt])
                             if len(follow[sym]) != before:
                                 changed = True
                         else:
-                            # Calcular si toda la cola puede derivar ε
                             cola_puede_eps = True
                             first_rest = set()
                             for s2 in rest:
-                                if es_epsilon(s2):
+                                if s2 == EPSILON:
                                     continue
                                 if es_terminal(s2):
                                     first_rest.add(s2)
@@ -104,7 +97,7 @@ def calcular_follow(first=None):
                                     break
                                 elif es_no_terminal(s2):
                                     for f in first[s2]:
-                                        if not es_epsilon(f):
+                                        if f != EPSILON:
                                             first_rest.add(f)
                                     if EPSILON not in first[s2]:
                                         cola_puede_eps = False
@@ -113,7 +106,6 @@ def calcular_follow(first=None):
                                     first_rest.add(s2)
                                     cola_puede_eps = False
                                     break
-                            # Añadir FIRST(rest) a FOLLOW(sym)
                             before = len(follow[sym])
                             follow[sym].update(first_rest)
                             if len(follow[sym]) != before:
@@ -124,34 +116,6 @@ def calcular_follow(first=None):
                                 if len(follow[sym]) != before:
                                     changed = True
     return follow
-
-
-def mostrar_first_follow():
-    first = calcular_first()
-    follow = calcular_follow(first)
-    
-    print("=" * 60)
-    print("CONJUNTOS FIRST")
-    print("=" * 60)
-    for nt in sorted(NO_TERMINALES):
-        elems = sorted([e if e != EPSILON else 'epsilon' for e in first[nt]])
-        print(f"FIRST({nt}) = {{ {', '.join(elems)} }}")
-    
-    print("\n" + "=" * 60)
-    print("CONJUNTOS FOLLOW")
-    print("=" * 60)
-    for nt in sorted(NO_TERMINALES):
-        elems = []
-        for e in sorted(follow[nt]):
-            if e == '$':
-                elems.append('$')
-            elif e == EPSILON:
-                elems.append('epsilon')
-            else:
-                elems.append(e)
-        print(f"FOLLOW({nt}) = {{ {', '.join(elems)} }}")
-    
-    return first, follow
 
 
 def construir_tabla_ll1(gramatica=None, terminales=None, no_terminales=None):
@@ -170,16 +134,15 @@ def construir_tabla_ll1(gramatica=None, terminales=None, no_terminales=None):
     
     for nt, producciones in gramatica.items():
         for i, prod in enumerate(producciones):
-            # Calcular FIRST de la producción
             first_prod = set()
             if not prod or prod == [EPSILON]:
                 first_prod = {EPSILON}
             else:
                 all_eps = True
                 for sym in prod:
+                    if sym == EPSILON:
+                        continue
                     if sym in terminales:
-                        if sym == EPSILON:
-                            continue
                         first_prod.add(sym)
                         all_eps = False
                         break
@@ -190,8 +153,6 @@ def construir_tabla_ll1(gramatica=None, terminales=None, no_terminales=None):
                         if EPSILON not in first[sym]:
                             all_eps = False
                             break
-                    elif sym == EPSILON:
-                        continue
                     else:
                         first_prod.add(sym)
                         all_eps = False
@@ -199,7 +160,6 @@ def construir_tabla_ll1(gramatica=None, terminales=None, no_terminales=None):
                 if all_eps:
                     first_prod.add(EPSILON)
             
-            # Para cada terminal en FIRST(prod)
             for a in first_prod:
                 if a != EPSILON:
                     key = (nt, a)
@@ -211,10 +171,8 @@ def construir_tabla_ll1(gramatica=None, terminales=None, no_terminales=None):
                             'prod1': tabla[key],
                             'prod2': prod
                         })
-                        print(f"¡CONFLICTO LL(1)! En M[{nt}, {a}] - FIRST/FIRST: {tabla[key]} vs {prod}")
                     tabla[key] = prod
             
-            # Si ε está en FIRST(prod), añadir para FOLLOW(nt)
             if EPSILON in first_prod:
                 for b in follow[nt]:
                     key = (nt, b)
@@ -226,22 +184,73 @@ def construir_tabla_ll1(gramatica=None, terminales=None, no_terminales=None):
                             'prod1': tabla[key],
                             'prod2': prod
                         })
-                        print(f"¡CONFLICTO LL(1)! En M[{nt}, {b}] - FIRST/FOLLOW: {tabla[key]} vs {prod}")
                     tabla[key] = prod
     
     return tabla, first, follow, conflictos
 
 
-if __name__ == '__main__':
-    import sys
-    mostrar_first_follow()
-    print("\n" + "=" * 60)
-    print("ANÁLISIS TABLA LL(1)")
-    print("=" * 60)
-    tabla, first, follow, conflictos = construir_tabla_ll1()
+def mostrar_first_follow():
+    first = calcular_first()
+    follow = calcular_follow(first)
+    
+    print("=" * 70)
+    print("GRAMATICA SMARTRULE - PRODUCCIONES NUMERADAS")
+    print("=" * 70)
+    idx = 1
+    for nt in ['Prog', 'Regla', 'ElsePart', 'Cond', 'OrExpr', 'OrTail', 'AndExpr', 'AndTail', 
+              'NotExpr', 'RelExpr', 'RelExprTail', 'Factor', 'ListaAcciones', 'AccionTail', 
+              'Accion', 'AsigOrCall', 'AsigTail']:
+        if nt in GRAMATICA:
+            for prod in GRAMATICA[nt]:
+                if prod == [EPSILON]:
+                    print(f"{idx:2d}. {nt} ::= epsilon")
+                else:
+                    print(f"{idx:2d}. {nt} ::= {' '.join(prod)}")
+                idx += 1
+    print(f"\nTotal producciones: {idx-1}")
+    
+    print("\n" + "=" * 70)
+    print("CONJUNTOS FIRST")
+    print("=" * 70)
+    for nt in ['Prog', 'Regla', 'ElsePart', 'Cond', 'OrExpr', 'OrTail', 'AndExpr', 'AndTail',
+              'NotExpr', 'RelExpr', 'RelExprTail', 'Factor', 'ListaAcciones', 'AccionTail',
+              'Accion', 'AsigOrCall', 'AsigTail']:
+        if nt in NO_TERMINALES:
+            elems = sorted([e if e != EPSILON else 'epsilon' for e in first[nt]])
+            print(f"FIRST({nt}) = {{ {', '.join(elems)} }}")
+    
+    print("\n" + "=" * 70)
+    print("CONJUNTOS FOLLOW")
+    print("=" * 70)
+    for nt in ['Prog', 'Regla', 'ElsePart', 'Cond', 'OrExpr', 'OrTail', 'AndExpr', 'AndTail',
+              'NotExpr', 'RelExpr', 'RelExprTail', 'Factor', 'ListaAcciones', 'AccionTail',
+              'Accion', 'AsigOrCall', 'AsigTail']:
+        if nt in NO_TERMINALES:
+            elems = []
+            for e in sorted(follow[nt]):
+                if e == '$':
+                    elems.append('$')
+                else:
+                    elems.append(e)
+            print(f"FOLLOW({nt}) = {{ {', '.join(elems)} }}")
+    
+    print("\n" + "=" * 70)
+    print("TABLA LL(1)")
+    print("=" * 70)
+    tabla, first_res, follow_res, conflictos = construir_tabla_ll1()
     print(f"Entradas en tabla LL(1): {len(tabla)}")
+    print(f"Conflictos detectados: {len(conflictos)}")
     if conflictos:
-        print(f"¡{len(conflictos)} CONFLICTO(S) DETECTADO(S)!")
+        for c in conflictos:
+            print(f"  - {c['tipo']} en M[{c['nt']}, {c['terminal']}]: {c['prod1']} vs {c['prod2']}")
+        print("\nLa gramática NO es LL(1).")
         sys.exit(1)
     else:
-        print("Sin conflictos detectados.")
+        print("\nNinguno: la gramática es LL(1).")
+    
+    return first, follow
+
+
+if __name__ == '__main__':
+    mostrar_first_follow()
+    sys.exit(0)

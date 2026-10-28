@@ -1,0 +1,6 @@
+WHEN humedad <= 30 THEN encender riego = 100;
+WHEN movimiento == TRUE THEN activar alarma;
+WHEN luz < 5 THEN encender luces;
+WHEN a == 1 OR b == 2 AND c != 3 THEN x = 1 ELSE x = 0;
+WHEN NOT NOT NOT x THEN a;
+WHEN bateria < 20 THEN volver_base, aterrizar, notificar operador;

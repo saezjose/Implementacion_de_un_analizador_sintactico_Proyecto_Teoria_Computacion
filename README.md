@@ -67,9 +67,9 @@ RelExprTail -> OP_REL Factor | ε
 Factor      -> NUM | ID | TRUE | FALSE
 ListaAcciones -> Accion AccionTail
 AccionTail    -> COMA Accion AccionTail | ε
-Accion        -> ID AccionResto
-AccionResto   -> IGUAL Factor | ID ArgResto | NUM | TRUE | FALSE | ε
-ArgResto      -> IGUAL Factor | ε
+Accion        -> ID AsigOrCall
+AsigOrCall    -> IGUAL Factor | ID AsigTail | NUM | TRUE | FALSE | ε
+AsigTail      -> IGUAL Factor | ε
 ```
 
 Ver `docs/gramatica.md` para detalles completos, FIRST/FOLLOW, tabla LL(1).
@@ -129,4 +129,4 @@ python -m unittest discover -s tests -v
 - El analizador léxico fue tomado como base del cuaderno `analizador_lexico1.ipynb`, adaptado y extendido.
 - Parser implementado desde cero con enfoque LL(1) descendente recursivo (sin generadores automáticos).
 - Árbol sintáctico/AST construido explícitamente.
-- Mensajes de error sintácticos con línea y columna.
+- Mensajes de error con formatos exactos: `Error sintáctico (token N, línea L, columna C): ...` y `Error léxico (línea L, columna C): símbolo no reconocido 'S'`.

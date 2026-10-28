@@ -1,0 +1,4 @@
+WHEN x THEN a;
+WHEN NOT NOT NOT x THEN a;
+WHEN x THEN a; WHEN
+WHEN x # 3 THEN a;

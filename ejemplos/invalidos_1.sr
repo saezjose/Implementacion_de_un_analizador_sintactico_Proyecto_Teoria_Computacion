@@ -4,3 +4,7 @@ WHEN temperatura > 28 encender luces;
 WHEN AND humedad < 40 THEN encender ventilador;
 WHEN temperatura > 28 THEN ;
 WHEN temperatura > 28 THEN accion1,, accion2;
+WHEN temperatura > 28 THEN encender ventilador
+WHEN temperatura > 28 > 30 THEN encender ventilador;
+WHEN luz == 0 THEN encender luces ELSE ;
+WHEN luz == 0 THEN encender luces, ;

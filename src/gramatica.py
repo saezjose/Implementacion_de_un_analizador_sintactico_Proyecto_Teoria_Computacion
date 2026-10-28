@@ -19,9 +19,9 @@ GRAMATICA = {
     'Factor': [['NUM'], ['ID'], ['TRUE'], ['FALSE']],
     'ListaAcciones': [['Accion', 'AccionTail']],
     'AccionTail': [['COMA', 'Accion', 'AccionTail'], [EPSILON]],
-    'Accion': [['ID', 'AccionResto']],
-    'AccionResto': [['IGUAL', 'Factor'], ['ID', 'ArgResto'], ['NUM'], ['TRUE'], ['FALSE'], [EPSILON]],
-    'ArgResto': [['IGUAL', 'Factor'], [EPSILON]],
+    'Accion': [['ID', 'AsigOrCall']],
+    'AsigOrCall': [['IGUAL', 'Factor'], ['ID', 'AsigTail'], ['NUM'], ['TRUE'], ['FALSE'], [EPSILON]],
+    'AsigTail': [['IGUAL', 'Factor'], [EPSILON]],
 }
 
 TERMINALES = {
