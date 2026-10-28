@@ -2,34 +2,7 @@
 Cálculo de conjuntos FIRST y FOLLOW para la gramática SmartRule
 """
 
-
-# Gramática simplificada para análisis
-GRAMATICA = {
-    'Prog': [['Regla', 'Prog'], ['ε']],
-    'Regla': [['WHEN', 'Cond', 'THEN', 'ListaAcciones', 'ElsePart', 'PUNTO_COMA']],
-    'ElsePart': [['ELSE', 'ListaAcciones'], ['ε']],
-    'Cond': [['OrExpr']],
-    'OrExpr': [['AndExpr', 'OrTail']],
-    'OrTail': [['OR', 'AndExpr', 'OrTail'], ['ε']],
-    'AndExpr': [['NotExpr', 'AndTail']],
-    'AndTail': [['AND', 'NotExpr', 'AndTail'], ['ε']],
-    'NotExpr': [['NOT', 'NotExpr'], ['RelExpr']],
-    'RelExpr': [['Factor', 'RelExprTail']],
-    'RelExprTail': [['OP_REL', 'Factor'], ['ε']],
-    'Factor': [['NUM'], ['ID'], ['TRUE'], ['FALSE']],
-    'ListaAcciones': [['Accion', 'AccionTail']],
-    'AccionTail': [['COMA', 'Accion', 'AccionTail'], ['ε']],
-    'Accion': [['ID', 'AsigOrCall']],
-    'AsigOrCall': [['IGUAL', 'Factor'], ['Factor'], ['ε']],
-}
-
-TERMINALES = {
-    'WHEN', 'THEN', 'ELSE', 'AND', 'OR', 'NOT', 'TRUE', 'FALSE',
-    'NUM', 'ID', 'OP_REL', 'IGUAL', 'COMA', 'PUNTO_COMA',
-    'PARENT_IZQ', 'PARENT_DER', 'EOF', 'ε'
-}
-
-NO_TERMINALES = set(GRAMATICA.keys())
+from src.gramatica import GRAMATICA, TERMINALES, NO_TERMINALES, SIMBOLO_INICIAL
 
 
 def calcular_first():
@@ -175,6 +148,7 @@ def construir_tabla_ll1():
     follow = calcular_follow(first)
     
     tabla = {}
+    conflictos = []
     
     for nt, producciones in GRAMATICA.items():
         for i, prod in enumerate(producciones):
@@ -210,7 +184,14 @@ def construir_tabla_ll1():
                 if a != 'ε':
                     key = (nt, a)
                     if key in tabla:
-                        print(f"¡CONFLICTO LL(1)! En M[{nt}, {a}]")
+                        conflictos.append({
+                            'tipo': 'FIRST/FIRST',
+                            'nt': nt,
+                            'terminal': a,
+                            'prod1': tabla[key],
+                            'prod2': prod
+                        })
+                        print(f"¡CONFLICTO LL(1)! En M[{nt}, {a}] - FIRST/FIRST: {tabla[key]} vs {prod}")
                     tabla[key] = prod
             
             # Si ε está en FIRST(prod), añadir para FOLLOW(nt)
@@ -218,17 +199,29 @@ def construir_tabla_ll1():
                 for b in follow[nt]:
                     key = (nt, b)
                     if key in tabla:
-                        print(f"¡CONFLICTO LL(1)! En M[{nt}, {b}]")
+                        conflictos.append({
+                            'tipo': 'FIRST/FOLLOW',
+                            'nt': nt,
+                            'terminal': b,
+                            'prod1': tabla[key],
+                            'prod2': prod
+                        })
+                        print(f"¡CONFLICTO LL(1)! En M[{nt}, {b}] - FIRST/FOLLOW: {tabla[key]} vs {prod}")
                     tabla[key] = prod
     
-    return tabla, first, follow
+    return tabla, first, follow, conflictos
 
 
 if __name__ == '__main__':
+    import sys
     mostrar_first_follow()
     print("\n" + "=" * 60)
     print("ANÁLISIS TABLA LL(1)")
     print("=" * 60)
-    tabla, first, follow = construir_tabla_ll1()
+    tabla, first, follow, conflictos = construir_tabla_ll1()
     print(f"Entradas en tabla LL(1): {len(tabla)}")
-    print("Sin conflictos detectados." if tabla else "Tabla vacía")
+    if conflictos:
+        print(f"¡{len(conflictos)} CONFLICTO(S) DETECTADO(S)!")
+        sys.exit(1)
+    else:
+        print("Sin conflictos detectados.")

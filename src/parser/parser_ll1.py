@@ -170,7 +170,7 @@ class ParserLL1:
         return []
     
     def parse_accion(self):
-        """Accion -> ID AsigOrCall | ID ID IGUAL Factor"""
+        """Accion -> ID AccionResto"""
         token = self.actual()
         if token[0] != 'ID':
             raise ParserError(
@@ -179,39 +179,34 @@ class ParserLL1:
             )
         nombre1 = token[1]
         self.consumir('ID')
-        
-        # Caso 1: asignación directa -> ID = Factor
-        if self.actual()[0] == 'IGUAL':
+        return self.parse_accion_resto(nombre1)
+    
+    def parse_accion_resto(self, nombre1):
+        """AccionResto -> IGUAL Factor | ID ArgResto | NUM | TRUE | FALSE | ε"""
+        tok = self.actual()
+        if tok[0] == 'IGUAL':
             self.consumir('IGUAL')
             valor = self.parse_factor()
             return Asignacion(nombre1, valor)
-        
-        # Caso 2: acción con objetivo y asignación -> ID ID = Factor (ej: encender luces = 100)
-        if self.actual()[0] == 'ID':
-            # Comprobar si después de este ID viene IGUAL
-            if self.pos < len(self.tokens) and self.tokens[self.pos][0] == 'ID':
-                nombre2 = self.tokens[self.pos][1]
-                if self.pos + 1 < len(self.tokens) and self.tokens[self.pos + 1][0] == 'IGUAL':
-                    self.consumir('ID')  # consumir nombre2
-                    self.consumir('IGUAL')  # consumir =
-                    valor = self.parse_factor()
-                    return Asignacion(nombre2, valor)
-            # Caso 2b: llamada con argumento -> ID Factor
+        elif tok[0] == 'ID':
+            nombre2 = tok[1]
+            self.consumir('ID')
+            return self.parse_arg_resto(nombre1, nombre2)
+        elif tok[0] in ['NUM', 'TRUE', 'FALSE']:
             arg = self.parse_factor()
             return LlamadaAccion(nombre1, arg)
-        
-        # Caso 3: llamada sin argumento
-        return LlamadaAccion(nombre1, None)
+        else:
+            # ε
+            return LlamadaAccion(nombre1, None)
     
-    def parse_asig_or_call(self, nombre):
-        """AsigOrCall -> IGUAL Factor | Factor | ε (legacy)"""
-        if self.actual()[0] == 'IGUAL':
+    def parse_arg_resto(self, nombre1, nombre2):
+        """ArgResto -> IGUAL Factor | ε"""
+        tok = self.actual()
+        if tok[0] == 'IGUAL':
             self.consumir('IGUAL')
             valor = self.parse_factor()
-            return Asignacion(nombre, valor)
-        elif self.actual()[0] in ['NUM', 'ID', 'TRUE', 'FALSE']:
-            arg = self.parse_factor()
-            return LlamadaAccion(nombre, arg)
+            # encender luces = 100 -> asignación al objetivo
+            return Asignacion(nombre2, valor)
         else:
-            # Sin argumento
-            return LlamadaAccion(nombre, None)
+            # llamada con argumento
+            return LlamadaAccion(nombre1, Identificador(nombre2))
