@@ -16,6 +16,7 @@
 \usepackage{enumitem}
 
 \geometry{margin=2.5cm}
+\setlength{\headheight}{14.5pt}
 
 \lstset{
   inputencoding=utf8,
@@ -691,7 +692,7 @@ I2 & \texttt{temperatura \textgreater{} 28 THEN encender luces;} & Rechaza & Rec
 I3 & \texttt{WHEN temperatura \textgreater{} 28 encender luces;} & Rechaza & Rechazada (col.~23): se esperaba THEN, se encontró \texttt{encender} & Falta la palabra reservada THEN.\\ \hline
 I4 & \texttt{WHEN AND humedad \textless{} 40 THEN encender ventilador;} & Rechaza & Rechazada (col.~6): se esperaba un factor, se encontró \texttt{AND} & Condición que empieza con operador lógico.\\ \hline
 I5 & \texttt{WHEN temperatura \textgreater{} 28 THEN ;} & Rechaza & Rechazada (col.~28): se esperaba el nombre de una acción (ID), se encontró \texttt{;} & Lista de acciones vacía.\\ \hline
-I6 & \texttt{WHEN temperatura \textgreater{} 28 THEN accion1,, accion2;} & Rechaza & Rechazada (col.~36): se esperaba el nombre de una acción (ID), se encontró \texttt{,} & Coma duplicada.\\ \hline
+I6 & \texttt{WHEN temperatura \textgreater{} 28 THEN accion1{,}{,} accion2;} & Rechaza & Rechazada (col.~36): se esperaba el nombre de una acción (ID), se encontró \texttt{,} & Coma duplicada.\\ \hline
 I7 & \texttt{WHEN temperatura \textgreater{} 28 THEN encender ventilador} & Rechaza & Rechazada (col.~47): se esperaba \texttt{;} al final de la regla, se encontró fin de la entrada & Falta el punto y coma final.\\ \hline
 I8 & \texttt{WHEN temperatura \textgreater{} 28 \textgreater{} 30 THEN encender ventilador;} & Rechaza & Rechazada (col.~23): se esperaba THEN, se encontró \texttt{\textgreater{}} & Comparación encadenada no permitida.\\ \hline
 I9 & \texttt{WHEN luz == 0 THEN encender luces ELSE ;} & Rechaza & Rechazada (col.~40): se esperaba el nombre de una acción (ID), se encontró \texttt{;} & ELSE sin acciones.\\ \hline
@@ -792,7 +793,7 @@ Con el fin de extender las capacidades del lenguaje, se proponen las siguientes 
     \item \textbf{Análisis semántico:} Incorporar verificación de tipos, detección de variables no definidas y validación de valores.
     \item \textbf{Generación de código intermedio:} Traducir reglas \textit{SmartRule} a código ejecutable para un simulador IoT.
     \item \textbf{Soporte para rangos y listas:} Ampliar el lenguaje para definir umbrales múltiples o acciones parametrizadas.
-    \item \textbf{Mejor visualización:} Implementar generación gráfica del AST (mediante \texttt{graphviz}) para una mejor comprensión didáctica.
+    \item \textbf{Mejor visualización:} Ampliar la generación gráfica del AST (actualmente se exporta a \texttt{.dot} con \texttt{graphviz}) con una interfaz interactiva para una mejor comprensión didáctica.
 \end{itemize}
 
 \newpage
@@ -807,6 +808,10 @@ Con el fin de extender las capacidades del lenguaje, se proponen las siguientes 
     \item Parr, T. (2013). \textit{The Definitive ANTLR 4 Reference}. The Pragmatic Bookshelf. (Referencia teórica sobre parsing)
     \item Sebesta, R. W. (2019). \textit{Concepts of Programming Languages} (12ª ed.). Pearson Education.
 \end{itemize}
+
+\section*{Declaración de uso de inteligencia artificial}
+% COMPLETAR: indicar herramienta(s) y para qué se usaron
+Se utilizó \textbf{[nombre de la herramienta]} como apoyo para [revisión de la gramática, generación de casos de prueba, depuración de código, redacción], conforme a las reglas del curso para proyectos. El grupo revisó, comprendió y es responsable de toda la solución presentada.
 
 \newpage
 
@@ -826,7 +831,7 @@ El código fuente completo, pruebas, ejemplos y documentación se encuentran en 
 \begin{itemize}[leftmargin=1cm]
     \item Python 3.10 o superior
     \item Sistema Operativo: Windows, Linux o macOS
-    \item No requiere dependencias externas (solo librería estándar)
+    \item No requiere dependencias externas (solo librería estándar; \texttt{pytest} es opcional)
 \end{itemize}
 
 \subsubsection{Ejecución}
