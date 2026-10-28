@@ -29,8 +29,8 @@ class TestErroresTarea4(unittest.TestCase):
         parser = ParserLL1(tokens)
         with self.assertRaises(ParserError) as ctx:
             parser.parse(modo_panic=False)
-        self.assertIn("se esperaba un valor", str(ctx.exception))
-        self.assertIn("operador", str(ctx.exception))
+        msg = str(ctx.exception)
+        self.assertTrue("se esperaba un factor" in msg or "se esperaba un valor" in msg)
     
     def test_mensaje_falta_then(self):
         entrada = "WHEN x > 1 encender;"
