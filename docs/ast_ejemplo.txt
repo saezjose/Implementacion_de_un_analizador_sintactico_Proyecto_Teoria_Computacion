@@ -1,0 +1,97 @@
+﻿============================================================
+ANALIZADOR SINTACTICO SMART RULE (LL(1))
+============================================================
+
+Entrada:
+WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
+WHEN luz == 0 OR movimiento == TRUE THEN encender luces, alarma = 1 ELSE apagar luces;
+WHEN NOT puerta_abierta THEN activar_alarma;
+WHEN nivel_agua >= 80 THEN bomba = 1, notificar_app;
+WHEN presion < 10 AND NOT emergencia THEN abrir_valvula;
+
+
+[OK] ANALISIS LEXICO EXITOSO
+[OK] ANALISIS SINTACTICO EXITOSO
+
+Se reconocieron 5 regla(s) valida(s).
+
+============================================================
+ARBOL SINTACTICO ABSTRACTO (AST)
+============================================================
+
++-- Programa
+    +-- Regla
+        +-- Condicion:
+            +-- BinOp(AND)
+                +-- BinOp(>)
+                    +-- Identificador(temperatura)
+                    +-- Literal(NUM=28)
+                +-- BinOp(<)
+                    +-- Identificador(humedad)
+                    +-- Literal(NUM=40)
+        +-- AccionesTHEN:
+            +-- ListaAcciones
+                +-- LlamadaAccion(encender)
+                    +-- argumento:
+                        +-- Identificador(ventilador)
+        +-- AccionesELSE: None
+    +-- Regla
+        +-- Condicion:
+            +-- BinOp(OR)
+                +-- BinOp(==)
+                    +-- Identificador(luz)
+                    +-- Literal(NUM=0)
+                +-- BinOp(==)
+                    +-- Identificador(movimiento)
+                    +-- Literal(BOOL=TRUE)
+        +-- AccionesTHEN:
+            +-- ListaAcciones
+                +-- LlamadaAccion(encender)
+                    +-- argumento:
+                        +-- Identificador(luces)
+                +-- Asignacion
+                    +-- variable: alarma
+                    +-- valor:
+                        +-- Literal(NUM=1)
+        +-- AccionesELSE:
+            +-- ListaAcciones
+                +-- LlamadaAccion(apagar)
+                    +-- argumento:
+                        +-- Identificador(luces)
+    +-- Regla
+        +-- Condicion:
+            +-- UnOp(NOT)
+                +-- Identificador(puerta_abierta)
+        +-- AccionesTHEN:
+            +-- ListaAcciones
+                +-- LlamadaAccion(activar_alarma)
+                    +-- argumento: None
+        +-- AccionesELSE: None
+    +-- Regla
+        +-- Condicion:
+            +-- BinOp(>=)
+                +-- Identificador(nivel_agua)
+                +-- Literal(NUM=80)
+        +-- AccionesTHEN:
+            +-- ListaAcciones
+                +-- Asignacion
+                    +-- variable: bomba
+                    +-- valor:
+                        +-- Literal(NUM=1)
+                +-- LlamadaAccion(notificar_app)
+                    +-- argumento: None
+        +-- AccionesELSE: None
+    +-- Regla
+        +-- Condicion:
+            +-- BinOp(AND)
+                +-- BinOp(<)
+                    +-- Identificador(presion)
+                    +-- Literal(NUM=10)
+                +-- UnOp(NOT)
+                    +-- Identificador(emergencia)
+        +-- AccionesTHEN:
+            +-- ListaAcciones
+                +-- LlamadaAccion(abrir_valvula)
+                    +-- argumento: None
+        +-- AccionesELSE: None
+

@@ -10,7 +10,7 @@ from src.parser.parser_ll1 import ParserLL1, ParserError
 from src.utils.grafo import mostrar_ast_simple
 
 
-def analizar(entrada, mostrar_tokens=False, mostrar_ast=False):
+def analizar(entrada, mostrar_tokens=False, mostrar_ast=False, todos_errores=False):
     print("=" * 60)
     print("ANALIZADOR SINTACTICO SMART RULE (LL(1))")
     print("=" * 60)
@@ -22,32 +22,58 @@ def analizar(entrada, mostrar_tokens=False, mostrar_ast=False):
         if mostrar_tokens:
             print("TOKENS:")
             for i, token in enumerate(tokens):
-                print(f"  {i}: {token}")
+                if hasattr(token, 'linea') and hasattr(token, 'columna'):
+                    print(f"  {i}: ({token.tipo}, '{token.lexema}', {token.linea}, {token.columna})")
+                elif isinstance(token, (list, tuple)) and len(token) >= 4:
+                    print(f"  {i}: ({token[0]}, '{token[1]}', {token[2]}, {token[3]})")
+                else:
+                    print(f"  {i}: {token}")
             print()
         
         # Análisis sintáctico
         parser = ParserLL1(tokens)
-        ast = parser.parse()
-        
-        print("[OK] ANALISIS LEXICO EXITOSO")
-        print("[OK] ANALISIS SINTACTICO EXITOSO")
-        print(f"\nSe reconocieron {len(ast.reglas)} regla(s) valida(s).")
-        
-        if mostrar_ast:
-            print("\n" + "=" * 60)
-            print("ARBOL SINTACTICO ABSTRACTO (AST)")
-            print("=" * 60)
-            print()
-            mostrar_ast_simple(ast)
-            print()
-        
-        return True, ast
+        if todos_errores:
+            ast, errores = parser.parse(modo_panic=True)
+            if errores:
+                print(f"[ERRORES] Se encontraron {len(errores)} error(es):")
+                for idx, err in enumerate(errores, 1):
+                    print(f"  {idx}. {err}")
+                print()
+                return False, None
+            else:
+                print("[OK] ANALISIS LEXICO EXITOSO")
+                print("[OK] ANALISIS SINTACTICO EXITOSO")
+                print(f"\nSe reconocieron {len(ast.reglas)} regla(s) valida(s).")
+                if mostrar_ast:
+                    print("\n" + "=" * 60)
+                    print("ARBOL SINTACTICO ABSTRACTO (AST)")
+                    print("=" * 60)
+                    print()
+                    mostrar_ast_simple(ast)
+                    print()
+                return True, ast
+        else:
+            ast = parser.parse(modo_panic=False)
+            # Si devuelve tupla
+            if isinstance(ast, tuple):
+                ast, errores = ast
+            print("[OK] ANALISIS LEXICO EXITOSO")
+            print("[OK] ANALISIS SINTACTICO EXITOSO")
+            print(f"\nSe reconocieron {len(ast.reglas)} regla(s) valida(s).")
+            if mostrar_ast:
+                print("\n" + "=" * 60)
+                print("ARBOL SINTACTICO ABSTRACTO (AST)")
+                print("=" * 60)
+                print()
+                mostrar_ast_simple(ast)
+                print()
+            return True, ast
         
     except LexerError as e:
-        print(f"[ERROR] ERROR LEXICO: {e}")
+        print(f"[ERROR] {e}")
         return False, None
     except ParserError as e:
-        print(f"[ERROR] ERROR SINTACTICO: {e}")
+        print(f"[ERROR] {e}")
         return False, None
     except Exception as e:
         print(f"[ERROR] ERROR INESPERADO: {e}")
@@ -104,16 +130,16 @@ def main():
     parser.add_argument('-t', '--tokens', action='store_true', help='Mostrar tokens')
     parser.add_argument('-a', '--ast', action='store_true', help='Mostrar AST')
     parser.add_argument('-i', '--interactivo', action='store_true', help='Modo interactivo')
+    parser.add_argument('-e', '--todos-errores', action='store_true', help='Modo pánico: reportar todos los errores')
     
     args = parser.parse_args()
     
     if args.interactivo or not any([args.archivo]):
         if args.archivo and not args.interactivo:
-            # Intentar leer archivo
             try:
                 with open(args.archivo, 'r', encoding='utf-8') as f:
                     entrada = f.read()
-                analizar(entrada, args.tokens, args.ast or True)
+                analizar(entrada, args.tokens, args.ast or True, todos_errores=args.todos_errores)
             except FileNotFoundError:
                 print(f"Error: No se encontró el archivo {args.archivo}")
                 sys.exit(1)
@@ -123,7 +149,7 @@ def main():
         try:
             with open(args.archivo, 'r', encoding='utf-8') as f:
                 entrada = f.read()
-            analizar(entrada, args.tokens, args.ast or True)
+            analizar(entrada, args.tokens, args.ast or True, todos_errores=args.todos_errores)
         except FileNotFoundError:
             print(f"Error: No se encontró el archivo {args.archivo}")
             sys.exit(1)

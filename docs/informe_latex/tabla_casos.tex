@@ -1,0 +1,78 @@
+\begin{longtable}{|p{6cm}|p{2cm}|p{5cm}|p{6cm}|}
+\hline
+\textbf{Entrada} & \textbf{Resultado esperado} & \textbf{Resultado obtenido} & \textbf{Observación} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Entrada} & \textbf{Resultado esperado} & \textbf{Resultado obtenido} & \textbf{Observación} \\
+\hline
+\endhead
+\hline
+\endfoot
+\texttt{WHEN temperatura > 28 THEN encender;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN a > 1 AND b < 2 THEN accion1;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN a > 1 OR b < 2 THEN accion1;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN NOT activo THEN apagar;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN x > 0 THEN encender ELSE apagar;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN x == 1 THEN a, b, c;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN x > 0 THEN y = 5;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN x > 0 THEN encender luces;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN x > 0 THEN reset;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN sistema == TRUE THEN iniciar;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN a > 1 THEN x; WHEN b < 2 THEN y;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN activo THEN encender;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN x > 1 encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 12): se esperaba la palabra reservada THEN} & Error sintáctico (línea 1, columna 12): se esperaba la palabra reservada THEN \\
+\hline
+\texttt{WHEN THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 6): se esperaba un valor (número, identificador, TRUE o FALSE)} & Error sintáctico (línea 1, columna 6): se esperaba un valor (número, identificador, TRUE o FALSE) \\
+\hline
+\texttt{WHEN x > 1 THEN encender} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla} & Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla \\
+\hline
+\texttt{x > 1 THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 1): se esperaba 'WHEN' al inicio de una regla, se encontró 'x'} & Error sintáctico (línea 1, columna 1): se esperaba 'WHEN' al inicio de una regla, se encontró 'x' \\
+\hline
+\texttt{WHEN x > 1 THEN a,, b;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba una acción después de ','} & Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' \\
+\hline
+\texttt{WHEN temperatura > THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 20): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>'} & Error sintáctico (línea 1, columna 20): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' \\
+\hline
+\texttt{WHEN x > 1 THEN ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 17): se esperaba al menos una acción después de THEN} & Error sintáctico (línea 1, columna 17): se esperaba al menos una acción después de THEN \\
+\hline
+\texttt{WHEN x > 1 THEN a ELSE ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 24): se esperaba al menos una acción después de THEN} & Error sintáctico (línea 1, columna 24): se esperaba al menos una acción después de THEN \\
+\hline
+\texttt{WHEN x > 1 THEN a,;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba una acción después de ','} & Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' \\
+\hline
+\texttt{WHEN x > 1 THEN ,a;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 17): se esperaba una acción después de ','} & Error sintáctico (línea 1, columna 17): se esperaba una acción después de ',' \\
+\hline
+\texttt{WHEN x > 1 THEN y = ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 21): se esperaba un valor (número, identificador, TRUE o FALSE)} & Error sintáctico (línea 1, columna 21): se esperaba un valor (número, identificador, TRUE o FALSE) \\
+\hline
+\texttt{WHEN x > = 1 THEN y;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 10): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>'} & Error sintáctico (línea 1, columna 10): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' \\
+\hline
+\texttt{} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN a > 1 THEN x;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN a > 1 THEN x;;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba 'WHEN' al inicio de una regla, se encontró ';'} & Error sintáctico (línea 1, columna 19): se esperaba 'WHEN' al inicio de una regla, se encontró ';' \\
+\hline
+\texttt{WHEN a > 1 THEN x; WHEN} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba un valor (número, identificador, TRUE o FALSE)} & Error sintáctico (línea 2, columna 1): se esperaba un valor (número, identificador, TRUE o FALSE) \\
+\hline
+\texttt{WHEN a > 1 THEN x; WHEN b > 2 THEN y} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla} & Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla \\
+\hline
+\texttt{WHEN x > 0 THEN encender luces = 100;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\texttt{WHEN NOT NOT activo THEN encender;} & ACEPTA & \texttt{ACEPTA} &  \\
+\hline
+\caption{Casos de prueba del analizador sintáctico LL(1)}
+\label{tab:casos}
+\end{longtable}

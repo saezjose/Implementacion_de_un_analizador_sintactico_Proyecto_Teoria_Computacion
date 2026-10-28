@@ -1,0 +1,36 @@
+# Tabla de Casos de Prueba - SmartRule
+
+| ID | Descripción | Entrada | Resultado esperado | Resultado obtenido | Observación |
+|---|-------------|---------|-------------------|-------------------|-------------|
+| 1 | Regla simple con relacional | `WHEN temperatura > 28 THEN encender;` | ACEPTA | ACEPTA |  |
+| 2 | Condición con AND | `WHEN a > 1 AND b < 2 THEN accion1;` | ACEPTA | ACEPTA |  |
+| 3 | Condición con OR | `WHEN a > 1 OR b < 2 THEN accion1;` | ACEPTA | ACEPTA |  |
+| 4 | Condición con NOT | `WHEN NOT activo THEN apagar;` | ACEPTA | ACEPTA |  |
+| 5 | Regla con ELSE | `WHEN x > 0 THEN encender ELSE apagar;` | ACEPTA | ACEPTA |  |
+| 6 | Múltiples acciones separadas por coma | `WHEN x == 1 THEN a, b, c;` | ACEPTA | ACEPTA |  |
+| 7 | Acción con asignación | `WHEN x > 0 THEN y = 5;` | ACEPTA | ACEPTA |  |
+| 8 | Acción con argumento | `WHEN x > 0 THEN encender luces;` | ACEPTA | ACEPTA |  |
+| 9 | Acción sin argumento | `WHEN x > 0 THEN reset;` | ACEPTA | ACEPTA |  |
+| 10 | Valores TRUE/FALSE | `WHEN sistema == TRUE THEN iniciar;` | ACEPTA | ACEPTA |  |
+| 11 | Múltiples reglas | `WHEN a > 1 THEN x; WHEN b < 2 THEN y;` | ACEPTA | ACEPTA |  |
+| 12 | Condición sin operador relacional (factor solo) | `WHEN activo THEN encender;` | ACEPTA | ACEPTA |  |
+| 13 | Falta THEN | `WHEN x > 1 encender;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 12): se esperaba la palabra reservada THEN | Error sintáctico (línea 1, columna 12): se esperaba la palabra reservada THEN |
+| 14 | Falta condición | `WHEN THEN encender;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 6): se esperaba un valor (número, identificador, TRUE o FALSE) | Error sintáctico (línea 1, columna 6): se esperaba un valor (número, identificador, TRUE o FALSE) |
+| 15 | Falta punto y coma | `WHEN x > 1 THEN encender` | RECHAZA | RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla | Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla |
+| 16 | Falta WHEN | `x > 1 THEN encender;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 1): se esperaba 'WHEN' al inicio de una regla, se encontró 'x' | Error sintáctico (línea 1, columna 1): se esperaba 'WHEN' al inicio de una regla, se encontró 'x' |
+| 17 | Coma sobrante | `WHEN x > 1 THEN a,, b;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' | Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' |
+| 18 | Falta operando tras operador relacional | `WHEN temperatura > THEN encender;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 20): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' | Error sintáctico (línea 1, columna 20): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' |
+| 19 | Lista de acciones vacía | `WHEN x > 1 THEN ;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 17): se esperaba al menos una acción después de THEN | Error sintáctico (línea 1, columna 17): se esperaba al menos una acción después de THEN |
+| 20 | Falta acción después de ELSE | `WHEN x > 1 THEN a ELSE ;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 24): se esperaba al menos una acción después de THEN | Error sintáctico (línea 1, columna 24): se esperaba al menos una acción después de THEN |
+| 21 | Coma al final sin acción | `WHEN x > 1 THEN a,;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' | Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' |
+| 22 | Falta acción después de coma | `WHEN x > 1 THEN ,a;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 17): se esperaba una acción después de ',' | Error sintáctico (línea 1, columna 17): se esperaba una acción después de ',' |
+| 23 | Falta valor tras IGUAL | `WHEN x > 1 THEN y = ;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 21): se esperaba un valor (número, identificador, TRUE o FALSE) | Error sintáctico (línea 1, columna 21): se esperaba un valor (número, identificador, TRUE o FALSE) |
+| 24 | Operador relacional mal formado o incompleto | `WHEN x > = 1 THEN y;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 10): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' | Error sintáctico (línea 1, columna 10): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' |
+| 25 | Entrada vacía | `` | ACEPTA | ACEPTA |  |
+| 26 | Solo espacios | `` | ACEPTA | ACEPTA |  |
+| 27 | Regla sin acciones? lista vacía tras THEN | `WHEN a > 1 THEN x;` | ACEPTA | ACEPTA |  |
+| 28 | Múltiples punto y coma | `WHEN a > 1 THEN x;;` | RECHAZA | RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba 'WHEN' al inicio de una regla, se encontró ';' | Error sintáctico (línea 1, columna 19): se esperaba 'WHEN' al inicio de una regla, se encontró ';' |
+| 29 | Regla mal formada con doble WHEN | `WHEN a > 1 THEN x; WHEN` | RECHAZA | RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba un valor (número, identificador, TRUE o FALSE) | Error sintáctico (línea 2, columna 1): se esperaba un valor (número, identificador, TRUE o FALSE) |
+| 30 | Falta cierre tras múltiples reglas | `WHEN a > 1 THEN x; WHEN b > 2 THEN y` | RECHAZA | RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla | Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla |
+| 31 | Acción con ID ID asignación | `WHEN x > 0 THEN encender luces = 100;` | ACEPTA | ACEPTA |  |
+| 32 | Condición con NOT anidado | `WHEN NOT NOT activo THEN encender;` | ACEPTA | ACEPTA |  |

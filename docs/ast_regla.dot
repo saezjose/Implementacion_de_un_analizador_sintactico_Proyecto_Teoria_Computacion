@@ -1,0 +1,25 @@
+digraph AST {
+  node [shape=box, style=filled, fillcolor=lightblue];
+  rankdir=TB;
+  n1 [label="Programa"];
+  n2 [label="Regla"];
+  n1 -> n2;
+  n3 [label="BinOp\nAND", fillcolor=lightyellow];
+  n2 -> n3;
+  n4 [label="BinOp\n>", fillcolor=lightyellow];
+  n3 -> n4;
+  n5 [label="Identificador\na", fillcolor=lightgreen];
+  n4 -> n5;
+  n6 [label="Literal\nNUM=1", fillcolor=lightgreen];
+  n4 -> n6;
+  n7 [label="BinOp\n<", fillcolor=lightyellow];
+  n3 -> n7;
+  n8 [label="Identificador\nb", fillcolor=lightgreen];
+  n7 -> n8;
+  n9 [label="Literal\nNUM=2", fillcolor=lightgreen];
+  n7 -> n9;
+  n10 [label="ListaAcciones"];
+  n2 -> n10;
+  n11 [label="LlamadaAccion\nx"];
+  n10 -> n11;
+}
