@@ -33,29 +33,29 @@
 \hline
 \texttt{WHEN activo THEN encender;} & ACEPTA & \texttt{ACEPTA} &  \\
 \hline
-\texttt{WHEN x > 1 encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 12): se esperaba la palabra reservada THEN} & Error sintáctico (línea 1, columna 12): se esperaba la palabra reservada THEN \\
+\texttt{WHEN x > 1 encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 5, línea 1, columna 12): se esperaba THEN, se encontró 'encender'} & Error sintáctico (token 5, línea 1, columna 12): se esperaba THEN, se encontró 'encender' \\
 \hline
-\texttt{WHEN THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 6): se esperaba un valor (número, identificador, TRUE o FALSE)} & Error sintáctico (línea 1, columna 6): se esperaba un valor (número, identificador, TRUE o FALSE) \\
+\texttt{WHEN THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 2, línea 1, columna 6): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'THEN'} & Error sintáctico (token 2, línea 1, columna 6): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'THEN' \\
 \hline
-\texttt{WHEN x > 1 THEN encender} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla} & Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla \\
+\texttt{WHEN x > 1 THEN encender} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 7, línea 2, columna 1): se esperaba ';' al final de la regla, se encontró fin de la entrada} & Error sintáctico (token 7, línea 2, columna 1): se esperaba ';' al final de la regla, se encontró fin de la entrada \\
 \hline
-\texttt{x > 1 THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 1): se esperaba 'WHEN' al inicio de una regla, se encontró 'x'} & Error sintáctico (línea 1, columna 1): se esperaba 'WHEN' al inicio de una regla, se encontró 'x' \\
+\texttt{x > 1 THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 1, línea 1, columna 1): se esperaba la palabra reservada WHEN o el fin de la entrada, se encontró 'x'} & Error sintáctico (token 1, línea 1, columna 1): se esperaba la palabra reservada WHEN o el fin de la entrada, se encontró 'x' \\
 \hline
-\texttt{WHEN x > 1 THEN a,, b;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba una acción después de ','} & Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' \\
+\texttt{WHEN x > 1 THEN a,, b;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 8, línea 1, columna 19): se esperaba el nombre de una acción (ID), se encontró ','} & Error sintáctico (token 8, línea 1, columna 19): se esperaba el nombre de una acción (ID), se encontró ',' \\
 \hline
-\texttt{WHEN temperatura > THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 20): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>'} & Error sintáctico (línea 1, columna 20): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' \\
+\texttt{WHEN temperatura > THEN encender;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 4, línea 1, columna 20): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'THEN'} & Error sintáctico (token 4, línea 1, columna 20): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'THEN' \\
 \hline
-\texttt{WHEN x > 1 THEN ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 17): se esperaba al menos una acción después de THEN} & Error sintáctico (línea 1, columna 17): se esperaba al menos una acción después de THEN \\
+\texttt{WHEN x > 1 THEN ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 6, línea 1, columna 17): se esperaba el nombre de una acción (ID), se encontró ';'} & Error sintáctico (token 6, línea 1, columna 17): se esperaba el nombre de una acción (ID), se encontró ';' \\
 \hline
-\texttt{WHEN x > 1 THEN a ELSE ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 24): se esperaba al menos una acción después de THEN} & Error sintáctico (línea 1, columna 24): se esperaba al menos una acción después de THEN \\
+\texttt{WHEN x > 1 THEN a ELSE ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 8, línea 1, columna 24): se esperaba el nombre de una acción (ID), se encontró ';'} & Error sintáctico (token 8, línea 1, columna 24): se esperaba el nombre de una acción (ID), se encontró ';' \\
 \hline
-\texttt{WHEN x > 1 THEN a,;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba una acción después de ','} & Error sintáctico (línea 1, columna 19): se esperaba una acción después de ',' \\
+\texttt{WHEN x > 1 THEN a,;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 8, línea 1, columna 19): se esperaba el nombre de una acción (ID), se encontró ';'} & Error sintáctico (token 8, línea 1, columna 19): se esperaba el nombre de una acción (ID), se encontró ';' \\
 \hline
-\texttt{WHEN x > 1 THEN ,a;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 17): se esperaba una acción después de ','} & Error sintáctico (línea 1, columna 17): se esperaba una acción después de ',' \\
+\texttt{WHEN x > 1 THEN ,a;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 6, línea 1, columna 17): se esperaba el nombre de una acción (ID), se encontró ','} & Error sintáctico (token 6, línea 1, columna 17): se esperaba el nombre de una acción (ID), se encontró ',' \\
 \hline
-\texttt{WHEN x > 1 THEN y = ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 21): se esperaba un valor (número, identificador, TRUE o FALSE)} & Error sintáctico (línea 1, columna 21): se esperaba un valor (número, identificador, TRUE o FALSE) \\
+\texttt{WHEN x > 1 THEN y = ;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 8, línea 1, columna 21): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró ';'} & Error sintáctico (token 8, línea 1, columna 21): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró ';' \\
 \hline
-\texttt{WHEN x > = 1 THEN y;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 10): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>'} & Error sintáctico (línea 1, columna 10): se esperaba un valor (número, identificador, TRUE o FALSE) después del operador '>' \\
+\texttt{WHEN x > = 1 THEN y;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 4, línea 1, columna 10): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró '='} & Error sintáctico (token 4, línea 1, columna 10): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró '=' \\
 \hline
 \texttt{} & ACEPTA & \texttt{ACEPTA} &  \\
 \hline
@@ -63,11 +63,11 @@
 \hline
 \texttt{WHEN a > 1 THEN x;} & ACEPTA & \texttt{ACEPTA} &  \\
 \hline
-\texttt{WHEN a > 1 THEN x;;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 1, columna 19): se esperaba 'WHEN' al inicio de una regla, se encontró ';'} & Error sintáctico (línea 1, columna 19): se esperaba 'WHEN' al inicio de una regla, se encontró ';' \\
+\texttt{WHEN a > 1 THEN x;;} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 8, línea 1, columna 19): se esperaba la palabra reservada WHEN o el fin de la entrada, se encontró ';'} & Error sintáctico (token 8, línea 1, columna 19): se esperaba la palabra reservada WHEN o el fin de la entrada, se encontró ';' \\
 \hline
-\texttt{WHEN a > 1 THEN x; WHEN} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba un valor (número, identificador, TRUE o FALSE)} & Error sintáctico (línea 2, columna 1): se esperaba un valor (número, identificador, TRUE o FALSE) \\
+\texttt{WHEN a > 1 THEN x; WHEN} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 9, línea 2, columna 1): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró fin de la entrada} & Error sintáctico (token 9, línea 2, columna 1): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró fin de la entrada \\
 \hline
-\texttt{WHEN a > 1 THEN x; WHEN b > 2 THEN y} & RECHAZA & \texttt{RECHAZA: Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla} & Error sintáctico (línea 2, columna 1): se esperaba ';' al final de la regla \\
+\texttt{WHEN a > 1 THEN x; WHEN b > 2 THEN y} & RECHAZA & \texttt{RECHAZA: Error sintáctico (token 14, línea 2, columna 1): se esperaba ';' al final de la regla, se encontró fin de la entrada} & Error sintáctico (token 14, línea 2, columna 1): se esperaba ';' al final de la regla, se encontró fin de la entrada \\
 \hline
 \texttt{WHEN x > 0 THEN encender luces = 100;} & ACEPTA & \texttt{ACEPTA} &  \\
 \hline

@@ -275,7 +275,7 @@ class ParserLL1:
             if self.token_tipo(tok) == 'AND' or self.token_tipo(tok) == 'OR' or self.token_tipo(tok) == 'PUNTO_COMA':
                 raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró '" + self.token_lexema(tok) + "'", tok, self.token_index())
             if self.token_tipo(tok) == 'OP_REL':
-                raise ParserError("se esperaba THEN, se encontró '" + self.token_lexema(tok) + "'", tok, self.token_index())
+                raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró '" + self.token_lexema(tok) + "'", tok, self.token_index())
             if self.token_tipo(tok) not in ['NUM', 'ID', 'TRUE', 'FALSE']:
                 raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró '" + self.token_lexema(tok) + "'", tok, self.token_index())
             factor2 = self.parse_factor()
@@ -313,29 +313,19 @@ class ParserLL1:
         tok = self.actual()
         if self.token_tipo(tok) in ('ELSE', 'PUNTO_COMA', 'EOF'):
             raise ParserError(f"se esperaba el nombre de una acción (ID), se encontró {self.encontrado(tok)}", tok, self.token_index())
-        try:
-            accion = self.parse_accion()
-        except ParserError:
-            raise
+        accion = self.parse_accion()
         acciones = [accion]
-        try:
-            acciones.extend(self.parse_accion_tail())
-        except ParserError:
-            raise
+        acciones.extend(self.parse_accion_tail())
         return ListaAcciones(acciones)
     
     def parse_accion_tail(self):
         """AccionTail -> COMA Accion AccionTail | ε"""
         if self.token_tipo(self.actual()) == 'COMA':
-            coma_token = self.actual()
             self.consumir('COMA')
             tok = self.actual()
             if self.token_tipo(tok) in ('COMA', 'ELSE', 'PUNTO_COMA', 'EOF'):
                 raise ParserError(f"se esperaba el nombre de una acción (ID), se encontró {self.encontrado(tok)}", tok, self.token_index())
-            try:
-                accion = self.parse_accion()
-            except ParserError:
-                raise
+            accion = self.parse_accion()
             resto = self.parse_accion_tail()
             return [accion] + resto
         return []
@@ -373,9 +363,7 @@ class ParserLL1:
         elif tipo == 'COMA' or tipo == 'PUNTO_COMA' or tipo == 'ELSE' or tipo == 'EOF':
             return LlamadaAccion(nombre1, None)
         else:
-            if tipo == 'EOF':
-                raise ParserError("se esperaba el nombre de una acción (ID), se encontró fin de la entrada", tok, self.token_index())
-            raise ParserError(f"se esperaba el nombre de una acción (ID), se encontró '{self.token_lexema(tok)}'", tok, self.token_index())
+            raise ParserError(f"se esperaba ',', 'ELSE' o ';' después de la acción, se encontró {self.encontrado(tok)}", tok, self.token_index())
     
     def parse_asig_tail(self, nombre1, nombre2):
         """AsigTail -> IGUAL Factor | ε"""

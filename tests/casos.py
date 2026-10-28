@@ -216,7 +216,7 @@ CASOS = [
     },
     {
         "id": 27,
-        "descripcion": "Regla sin acciones? lista vacía tras THEN",
+        "descripcion": "Regla mínima con una sola acción",
         "entrada": "WHEN a > 1 THEN x;\n",
         "esperado": "ACEPTA",
         "observacion": "",

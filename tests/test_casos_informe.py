@@ -61,7 +61,7 @@ class TestCasosInforme(unittest.TestCase):
         self.assertIsNotNone(ast)
 
     def test_v9(self):
-        entrada = "WHEN NOT NOT NOT x THEN a;"
+        entrada = "WHEN NOT NOT activo THEN apagar;"
         tokens = analizador_lexico(entrada)
         parser = ParserLL1(tokens)
         ast = parser.parse()
