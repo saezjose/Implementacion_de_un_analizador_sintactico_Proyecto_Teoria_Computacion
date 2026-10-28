@@ -17,6 +17,16 @@
 
 \geometry{margin=2.5cm}
 
+\lstset{
+  inputencoding=utf8,
+  extendedchars=true,
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {¿}{{?`}}1 {¡}{{!`}}1
+    {ε}{{$\epsilon$}}1
+}
+
 \definecolor{codegray}{rgb}{0.97,0.97,0.97}
 \definecolor{commentcolor}{rgb}{0,0.5,0}
 \definecolor{keywordcolor}{rgb}{0,0,0.6}
@@ -64,8 +74,8 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{Proyecto: Analizador Sintáctico LL(1) - SmartRule}
-\fancyhead[R]{Teoría de la Computación - INFO1148}
+\fancyhead[L]{\small Proyecto: Analizador Sintáctico LL(1) - SmartRule}
+\fancyhead[R]{\small INFO1148}
 \fancyfoot[C]{\thepage}
 
 \begin{document}
@@ -74,9 +84,9 @@
 \begin{titlepage}
     \centering
     \vspace*{-1cm}
-    {\Large \textbf{UNIVERSIDAD}\par}
+    {\Large \textbf{UNIVERSIDAD CATÓLICA DE TEMUCO}\par}
     {\large \textbf{FACULTAD DE INGENIERÍA}\par}
-    {\large \textbf{DEPARTAMENTO DE CIENCIAS DE LA COMPUTACIÓN}\par}
+    {\large \textbf{ESCUELA DE INGENIERÍA INFORMÁTICA}\par}
     \vspace{1.5cm}
     
     {\LARGE \textbf{INFORME DEL PROYECTO}\par}
@@ -92,6 +102,8 @@
     \hline
     \textbf{Dato} & \textbf{Información} \\ 
     \hline
+    Asignatura & Teoría de la Computación \\ 
+    \hline
     Código curso & INFO1148 \\ 
     \hline
     Integrantes & José Sáez (Jefe de grupo) \newline Catalina Vergara \newline Alexa Galeano \\ 
@@ -105,8 +117,7 @@
     
     \vfill
     
-    {\large Santiago, Chile\par}
-    {\large \today\par}
+    {\large Temuco, Chile\par}
 \end{titlepage}
 
 % ===================== INDICE =====================
@@ -139,7 +150,7 @@ Diseñar e implementar un analizador sintáctico LL(1) descendente recursivo par
     \item Analizar la gramática, identificando y corrigiendo recursividad, factorización y posibles ambigüedades.
     \item Calcular y justificar los conjuntos \textit{FIRST} y \textit{FOLLOW} para cada no-terminal.
     \item Construir la tabla predictiva LL(1), verificando la ausencia de conflictos.
-    \item Implementar un analizador léxico y un analizador sintáctico LL(1) descendente recursivo, desarrollados íntegramente por el grupo.
+    \item Implementar un analizador léxico (extendido a partir del cuaderno base entregado por el docente) y un analizador sintáctico LL(1) descendente recursivo desarrollado por el grupo.
     \item Construir un Árbol Sintáctico Abstracto (AST) que represente correctamente la estructura del programa.
     \item Implementar un mecanismo de detección y reporte de errores léxicos y sintácticos con mensajes claros y localizados.
     \item Desarrollar un conjunto de pruebas exhaustivo (\textgreater25 casos), incluyendo casos válidos, inválidos, casos límite y una extensión creativa integrada a la gramática.
@@ -197,6 +208,20 @@ El lenguaje \textit{SmartRule} permite:
 \label{tab:tokens}
 \end{table}
 
+\subsection{Alfabeto del Lenguaje}
+El alfabeto de \textit{SmartRule} es el conjunto finito de caracteres que acepta el analizador léxico:
+\[
+\Sigma = \Sigma_{L} \cup \Sigma_{D} \cup \Sigma_{S} \cup \Sigma_{W}
+\]
+donde:
+\begin{itemize}[leftmargin=1cm]
+    \item $\Sigma_{L} = \{\texttt{A},\dots,\texttt{Z},\ \texttt{a},\dots,\texttt{z},\ \texttt{\_}\}$: letras y guion bajo.
+    \item $\Sigma_{D} = \{\texttt{0},\dots,\texttt{9}\}$: dígitos.
+    \item $\Sigma_{S} = \{\texttt{\textgreater},\ \texttt{\textless},\ \texttt{=},\ \texttt{!},\ \texttt{,},\ \texttt{;}\}$: símbolos de operadores y separadores.
+    \item $\Sigma_{W} = \{\text{espacio},\ \text{tabulación},\ \text{salto de línea},\ \text{retorno de carro}\}$: separadores ignorados.
+\end{itemize}
+Cualquier otro carácter (por ejemplo \texttt{\#} o \texttt{@}) produce un error léxico. Los lexemas se agrupan en las categorías de la Tabla~\ref{tab:tokens} y el analizador sintáctico trabaja con los \textit{terminales} \texttt{ID}, \texttt{NUM}, \texttt{OP\_REL}, \texttt{IGUAL}, \texttt{COMA}, \texttt{PUNTO\_COMA}, las palabras reservadas y el marcador de fin de entrada \texttt{\$}.
+
 \subsection{Ejemplos de Programas}
 
 \subsubsection{Ejemplos Válidos}
@@ -222,6 +247,29 @@ WHEN temperatura > 28 THEN ;                         // Lista de acciones vacía
 WHEN temperatura > 28 THEN accion1,, accion2;        // Coma extra
 \end{lstlisting}
 
+
+\subsection{Extensión Creativa}
+Sobre los requisitos mínimos del enunciado se incorporó como extensión creativa un conjunto de construcciones propias del dominio domótico, todas integradas en la gramática (no son decorativas):
+\begin{itemize}[leftmargin=1cm]
+    \item \textbf{Negación} \texttt{NOT}: operador unario prefijo y anidable, de mayor precedencia que \texttt{AND} y \texttt{OR}.
+    \item \textbf{Cláusula alternativa} \texttt{ELSE}: define las acciones que se ejecutan cuando la condición no se cumple.
+    \item \textbf{Múltiples acciones} separadas por coma, con acciones sin argumento, con argumento (\texttt{encender luces}) y con asignación (\texttt{bomba = 1}, \texttt{encender riego = 100}).
+\end{itemize}
+La Tabla~\ref{tab:ext} indica dónde se refleja cada construcción: producciones y celdas de la tabla LL(1) (Sección~\ref{sec:first}) y casos de prueba (Sección~\ref{sec:casos}).
+
+{\footnotesize
+\begin{longtable}{|>{\raggedright\arraybackslash}p{3.6cm}|c|>{\raggedright\arraybackslash}p{6.4cm}|>{\raggedright\arraybackslash}p{2.4cm}|}
+\caption{Integración de la extensión creativa en gramática, tabla LL(1) y pruebas}\label{tab:ext}\\ \hline
+\textbf{Construcción} & \textbf{Prod.} & \textbf{Celdas de la tabla LL(1)} & \textbf{Pruebas}\\ \hline
+\endfirsthead \hline
+\endhead
+Negación \texttt{NOT} (prefija, anidable) & 13 & $M[\mathit{NotExpr},\mathtt{NOT}]$ & V3, V5, V9, L3\\ \hline
+Cláusula alternativa \texttt{ELSE} & 4, 5 & $M[\mathit{ElsePart},\mathtt{ELSE}]$, $M[\mathit{ElsePart},\mathtt{PUNTO\_COMA}]$ & V2, V8, I9, L4\\ \hline
+Múltiples acciones separadas por coma & 23, 24 & $M[\mathit{AccionTail},\mathtt{COMA}]$, $M[\mathit{AccionTail},\mathtt{ELSE}]$, $M[\mathit{AccionTail},\mathtt{PUNTO\_COMA}]$ & V2, V4, V10, I6, I10\\ \hline
+Acciones con argumento, objeto y asignación & 25--33 & Todas las celdas de $\mathit{Accion}$, $\mathit{AsigOrCall}$ y $\mathit{AsigTail}$ (Tabla~\ref{tab:ll1}) & V1, V4, V6, V8\\ \hline
+\end{longtable}
+}
+
 \newpage
 
 % ===================== 3. GRAMÁTICA LIBRE DE CONTEXTO =====================
@@ -231,139 +279,224 @@ WHEN temperatura > 28 THEN accion1,, accion2;        // Coma extra
 Se ha diseñado una Gramática Libre de Contexto $G = (V_N, V_T, P, S)$, donde:
 
 \begin{itemize}[leftmargin=1cm]
-    \item $V_N$ = \{Prog, Regla, ElsePart, Cond, OrExpr, OrTail, AndExpr, AndTail, NotExpr, RelExpr, RelExprTail, Factor, ListaAcciones, AccionTail, Accion\}
+    \item $V_N$ = \{Prog, Regla, ElsePart, Cond, OrExpr, OrTail, AndExpr, AndTail, NotExpr, RelExpr, RelExprTail, Factor, ListaAcciones, AccionTail, Accion, AsigOrCall, AsigTail\}
     \item $V_T$ = \{WHEN, THEN, ELSE, AND, OR, NOT, TRUE, FALSE, NUM, ID, OP\_REL, IGUAL, COMA, PUNTO\_COMA, \$\}
     \item $S = Prog$
     \item $P$ = Conjunto de producciones definido a continuación
 \end{itemize}
 
 \subsection{Producciones de la Gramática}
-\begin{align}
-Prog        &\to Regla\ Prog \mid \epsilon\\
-Regla       &\to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\\
-ElsePart    &\to ELSE\ ListaAcciones \mid \epsilon\\
-Cond        &\to OrExpr\\
-OrExpr      &\to AndExpr\ OrTail\\
-OrTail      &\to OR\ AndExpr\ OrTail \mid \epsilon\\
-AndExpr     &\to NotExpr\ AndTail\\
-AndTail     &\to AND\ NotExpr\ AndTail \mid \epsilon\\
-NotExpr     &\to NOT\ NotExpr \mid RelExpr\\
-RelExpr     &\to Factor\ RelExprTail\\
-RelExprTail &\to OP\_REL\ Factor \mid \epsilon\\
-Factor      &\to NUM \mid ID \mid TRUE \mid FALSE\\
-ListaAcciones &\to Accion\ AccionTail\\
-AccionTail    &\to COMA\ Accion\ AccionTail \mid \epsilon\\
-Accion        &\to ID\ AsigOrCall \mid ID\ ID\ IGUAL\ Factor
-\end{align}
+Las producciones se muestran agrupadas por no terminal; en la Tabla~\ref{tab:select} aparecen numeradas individualmente.
+\begin{align*}
+\mathit{Prog} &\to \mathit{Regla}\ \mathit{Prog} \mid \epsilon \\
+\mathit{Regla} &\to \mathtt{WHEN}\ \mathit{Cond}\ \mathtt{THEN}\ \mathit{ListaAcciones}\ \mathit{ElsePart}\ \mathtt{PUNTO\_COMA} \\
+\mathit{ElsePart} &\to \mathtt{ELSE}\ \mathit{ListaAcciones} \mid \epsilon \\
+\mathit{Cond} &\to \mathit{OrExpr} \\
+\mathit{OrExpr} &\to \mathit{AndExpr}\ \mathit{OrTail} \\
+\mathit{OrTail} &\to \mathtt{OR}\ \mathit{AndExpr}\ \mathit{OrTail} \mid \epsilon \\
+\mathit{AndExpr} &\to \mathit{NotExpr}\ \mathit{AndTail} \\
+\mathit{AndTail} &\to \mathtt{AND}\ \mathit{NotExpr}\ \mathit{AndTail} \mid \epsilon \\
+\mathit{NotExpr} &\to \mathtt{NOT}\ \mathit{NotExpr} \mid \mathit{RelExpr} \\
+\mathit{RelExpr} &\to \mathit{Factor}\ \mathit{RelExprTail} \\
+\mathit{RelExprTail} &\to \mathtt{OP\_REL}\ \mathit{Factor} \mid \epsilon \\
+\mathit{Factor} &\to \mathtt{NUM} \mid \mathtt{ID} \mid \mathtt{TRUE} \mid \mathtt{FALSE} \\
+\mathit{ListaAcciones} &\to \mathit{Accion}\ \mathit{AccionTail} \\
+\mathit{AccionTail} &\to \mathtt{COMA}\ \mathit{Accion}\ \mathit{AccionTail} \mid \epsilon \\
+\mathit{Accion} &\to \mathtt{ID}\ \mathit{AsigOrCall} \\
+\mathit{AsigOrCall} &\to \mathtt{IGUAL}\ \mathit{Factor} \mid \mathtt{ID}\ \mathit{AsigTail} \mid \mathtt{NUM} \mid \mathtt{TRUE} \mid \mathtt{FALSE} \mid \epsilon \\
+\mathit{AsigTail} &\to \mathtt{IGUAL}\ \mathit{Factor} \mid \epsilon
+\end{align*}
 
 \subsection{Análisis y Transformaciones de la Gramática}
 
 \subsubsection{Recursión Izquierda}
-Tras el análisis de las producciones, se verifica que la gramática \textbf{no presenta recursión izquierda directa}. Para el caso de listas (reglas, acciones, operadores lógicos), se empleó \textbf{recursión por la derecha} mediante las reglas \textit{Tail} (\texttt{OrTail}, \texttt{AndTail}, \texttt{AccionTail}), lo cual es idóneo para un parser LL(1) descendente recursivo.
+Tras el análisis de las producciones, se verifica que la gramática \textbf{no presenta recursión izquierda}, ni directa ni indirecta (comprobado construyendo el grafo de primeros símbolos de cada no terminal y verificando que no tiene ciclos). Para el caso de listas (reglas, acciones, operadores lógicos), se empleó \textbf{recursión por la derecha} mediante las reglas \textit{Tail} (\texttt{OrTail}, \texttt{AndTail}, \texttt{AccionTail}), lo cual es idóneo para un parser LL(1) descendente recursivo.
 
-\subsubsection{Factorización}
-Se aplicó factorización en las producciones relacionadas con acciones. En particular, \texttt{AsigOrCall} permite distinguir entre:
+\subsubsection{Factorización por la Izquierda}
+Durante el análisis se detectó un \textbf{conflicto FIRST/FIRST} en la producción de acciones. La versión inicial de la gramática era:
+\begin{align*}
+\mathit{Accion} &\to \mathit{ID}\ \mathit{AsigOrCall} \mid \mathit{ID}\ \mathit{ID}\ \mathit{IGUAL}\ \mathit{Factor}\\
+\mathit{AsigOrCall} &\to \mathit{IGUAL}\ \mathit{Factor} \mid \mathit{Factor} \mid \epsilon
+\end{align*}
+Las dos alternativas de \textit{Accion} comienzan con \texttt{ID}, por lo que con un solo token de anticipación el parser no puede elegir entre ellas. Además, \textit{AsigOrCall $\to$ Factor} también puede derivar \texttt{ID}, de modo que una entrada como \texttt{encender luces} admitía más de una derivación. Por lo tanto esa versión \textbf{no era LL(1)}.
+
+Se resolvió factorizando por la izquierda el prefijo común \texttt{ID} y extrayendo la parte opcional de la asignación en un nuevo no terminal, \textit{AsigTail}:
+\begin{align*}
+\mathit{Accion} &\to \mathtt{ID}\ \mathit{AsigOrCall}\\
+\mathit{AsigOrCall} &\to \mathtt{IGUAL}\ \mathit{Factor} \mid \mathtt{ID}\ \mathit{AsigTail} \mid \mathtt{NUM} \mid \mathtt{TRUE} \mid \mathtt{FALSE} \mid \epsilon\\
+\mathit{AsigTail} &\to \mathtt{IGUAL}\ \mathit{Factor} \mid \epsilon
+\end{align*}
+El lenguaje generado no cambia; las cuatro formas de acción siguen siendo válidas:
 \begin{itemize}[leftmargin=1cm]
-    \item Asignación directa: \texttt{variable = valor}
-    \item Llamada con argumento: \texttt{accion argumento}
-    \item Llamada sin argumento: \texttt{accion}
+    \item Asignación directa, \texttt{bomba = 1}: \textit{AsigOrCall $\to$ IGUAL Factor}.
+    \item Llamada sin argumento, \texttt{activar\_alarma}: \textit{AsigOrCall $\to \epsilon$}.
+    \item Llamada con argumento, \texttt{encender luces} o \texttt{alarma 5}: \textit{AsigOrCall $\to$ ID AsigTail} con \textit{AsigTail $\to \epsilon$}, o \textit{AsigOrCall $\to$ NUM}.
+    \item Asignación con objeto, \texttt{encender luces = 100}: \textit{AsigOrCall $\to$ ID AsigTail} con \textit{AsigTail $\to$ IGUAL Factor}.
 \end{itemize}
 
-Además, se incorporó explícitamente la producción \texttt{Accion $\to$ ID\ ID\ IGUAL\ Factor} para soportar la forma \texttt{encender luces = 100}, la cual resulta muy común en el dominio domótico y fue necesaria para pasar los casos de prueba integrados.
-
 \subsubsection{Ambigüedad y Precedencia}
-La gramática es \textbf{no ambigua}. Se garantiza la precedencia correcta de operadores mediante la jerarquía:
+La gramática es \textbf{no ambigua}: toda gramática LL(1) lo es, y en la Sección~\ref{sec:ll1} se demuestra que ésta cumple la condición LL(1). La precedencia de operadores se garantiza mediante la jerarquía de no terminales:
 \[
 NOT > AND > OR
 \]
-Las comparaciones relacionales (\texttt{OP\_REL}) se evalúan entre dos factores y no son encadenables, tal como se define en \texttt{RelExpr}.
+Las comparaciones relacionales (\texttt{OP\_REL}) se evalúan entre dos factores y no son encadenables, tal como se define en \textit{RelExpr} (el caso \texttt{I8} de la Tabla~\ref{tab:casos} lo comprueba).
 
 \newpage
 
 % ===================== 4. FIRST, FOLLOW Y TABLA LL(1) =====================
 \section{Conjuntos FIRST, FOLLOW y Tabla LL(1)}
+\label{sec:first}
 
 \subsection{Conjuntos FIRST}
-El conjunto \textit{FIRST}($\alpha$) contiene todos los terminales con los cuales puede comenzar cualquier cadena derivable desde $\alpha$.
+El conjunto \textit{FIRST}($\alpha$) contiene todos los terminales con los cuales puede comenzar cualquier cadena derivable desde $\alpha$; incluye $\epsilon$ si $\alpha$ puede derivar la cadena vacía.
 
 \begin{table}[H]
 \centering
 \begin{tabular}{|l|l|}
 \hline
-\textbf{No Terminal} & \textbf{FIRST} \\ 
-\hline
-Prog & \{WHEN, $\epsilon$\} \\ 
-\hline
-Regla & \{WHEN\} \\ 
-\hline
-ElsePart & \{ELSE, $\epsilon$\} \\ 
-\hline
-Cond, OrExpr, AndExpr, NotExpr & \{NOT, NUM, ID, TRUE, FALSE\} \\ 
-\hline
-OrTail & \{OR, $\epsilon$\} \\ 
-\hline
-AndTail & \{AND, $\epsilon$\} \\ 
-\hline
-RelExpr & \{NUM, ID, TRUE, FALSE\} \\ 
-\hline
-RelExprTail & \{OP\_REL, $\epsilon$\} \\ 
-\hline
-Factor & \{NUM, ID, TRUE, FALSE\} \\ 
-\hline
-ListaAcciones, Accion & \{ID\} \\ 
-\hline
-AccionTail & \{COMA, $\epsilon$\} \\ 
-\hline
-AsigOrCall & \{IGUAL, NUM, ID, TRUE, FALSE, $\epsilon$\} \\ 
-\hline
+\textbf{No Terminal} & \textbf{FIRST}\\ \hline
+Prog & \{WHEN, $\epsilon$\}\\ \hline
+Regla & \{WHEN\}\\ \hline
+ElsePart & \{ELSE, $\epsilon$\}\\ \hline
+Cond & \{NOT, TRUE, FALSE, NUM, ID\}\\ \hline
+OrExpr & \{NOT, TRUE, FALSE, NUM, ID\}\\ \hline
+OrTail & \{OR, $\epsilon$\}\\ \hline
+AndExpr & \{NOT, TRUE, FALSE, NUM, ID\}\\ \hline
+AndTail & \{AND, $\epsilon$\}\\ \hline
+NotExpr & \{NOT, TRUE, FALSE, NUM, ID\}\\ \hline
+RelExpr & \{TRUE, FALSE, NUM, ID\}\\ \hline
+RelExprTail & \{OP\_REL, $\epsilon$\}\\ \hline
+Factor & \{TRUE, FALSE, NUM, ID\}\\ \hline
+ListaAcciones & \{ID\}\\ \hline
+AccionTail & \{COMA, $\epsilon$\}\\ \hline
+Accion & \{ID\}\\ \hline
+AsigOrCall & \{TRUE, FALSE, NUM, ID, IGUAL, $\epsilon$\}\\ \hline
+AsigTail & \{IGUAL, $\epsilon$\}\\ \hline
 \end{tabular}
 \caption{Conjuntos FIRST calculados}
 \label{tab:first}
 \end{table}
 
 \subsection{Conjuntos FOLLOW}
-El conjunto \textit{FOLLOW}(A) contiene todos los terminales que pueden aparecer inmediatamente después del no-terminal $A$ en alguna derivación sentencial.
+El conjunto \textit{FOLLOW}(A) contiene todos los terminales que pueden aparecer inmediatamente después del no-terminal $A$ en alguna derivación sentencial. Algunos casos que conviene justificar:
+\begin{itemize}[leftmargin=1cm]
+    \item $\texttt{AND} \in FOLLOW(NotExpr)$, $FOLLOW(RelExpr)$ y $FOLLOW(RelExprTail)$, porque en $AndExpr \to NotExpr\ AndTail$ lo que sigue a \textit{NotExpr} es \textit{AndTail}, cuyo FIRST contiene \texttt{AND}.
+    \item $FOLLOW(Factor)$ reúne \texttt{OP\_REL} (por \textit{RelExprTail}), los seguidores de \textit{RelExpr} (\texttt{AND}, \texttt{OR}, \texttt{THEN}) y los seguidores de \textit{AsigOrCall} y \textit{AsigTail} (\texttt{COMA}, \texttt{ELSE}, \texttt{PUNTO\_COMA}), porque \textit{Factor} puede ser el último símbolo de esas producciones.
+    \item $FOLLOW(ElsePart) = \{\texttt{PUNTO\_COMA}\}$, ya que \textit{ElsePart} cierra la regla justo antes de \texttt{;}.
+\end{itemize}
 
 \begin{table}[H]
 \centering
-\begin{tabular}{|l|l|}
+\begin{tabular}{|l|p{9.5cm}|}
 \hline
-\textbf{No Terminal} & \textbf{FOLLOW} \\ 
-\hline
-Prog & \{\$\} \\ 
-\hline
-Regla & \{WHEN, \$\} \\ 
-\hline
-ElsePart & \{PUNTO\_COMA\} \\ 
-\hline
-Cond, OrExpr, OrTail & \{THEN\} \\ 
-\hline
-AndExpr, AndTail, NotExpr, RelExpr, RelExprTail & \{OR, THEN\} \\ 
-\hline
-Factor & \{OP\_REL, AND, OR, THEN, COMA, PUNTO\_COMA, ELSE, IGUAL\} \\ 
-\hline
-ListaAcciones & \{PUNTO\_COMA, ELSE\} \\ 
-\hline
-AccionTail & \{PUNTO\_COMA, ELSE\} \\ 
-\hline
-Accion & \{COMA, PUNTO\_COMA, ELSE\} \\ 
-\hline
-AsigOrCall & \{COMA, PUNTO\_COMA, ELSE\} \\ 
-\hline
+\textbf{No Terminal} & \textbf{FOLLOW}\\ \hline
+Prog & \{\$\}\\ \hline
+Regla & \{WHEN, \$\}\\ \hline
+ElsePart & \{PUNTO\_COMA\}\\ \hline
+Cond & \{THEN\}\\ \hline
+OrExpr & \{THEN\}\\ \hline
+OrTail & \{THEN\}\\ \hline
+AndExpr & \{THEN, OR\}\\ \hline
+AndTail & \{THEN, OR\}\\ \hline
+NotExpr & \{THEN, AND, OR\}\\ \hline
+RelExpr & \{THEN, AND, OR\}\\ \hline
+RelExprTail & \{THEN, AND, OR\}\\ \hline
+Factor & \{THEN, ELSE, AND, OR, OP\_REL, COMA, PUNTO\_COMA\}\\ \hline
+ListaAcciones & \{ELSE, PUNTO\_COMA\}\\ \hline
+AccionTail & \{ELSE, PUNTO\_COMA\}\\ \hline
+Accion & \{ELSE, COMA, PUNTO\_COMA\}\\ \hline
+AsigOrCall & \{ELSE, COMA, PUNTO\_COMA\}\\ \hline
+AsigTail & \{ELSE, COMA, PUNTO\_COMA\}\\ \hline
 \end{tabular}
 \caption{Conjuntos FOLLOW calculados}
 \label{tab:follow}
 \end{table}
 
 \subsection{Tabla LL(1) y Verificación de Conflictos}
-Para cada entrada $M[A,a]$ se seleccionó la producción $A \to \alpha$ tal que $a \in FIRST(\alpha)$, o si $\epsilon \in FIRST(\alpha)$ y $a \in FOLLOW(A)$. 
+\label{sec:ll1}
+Para cada producción $A \to \alpha$ se define su \textit{conjunto de selección}: $FIRST(\alpha) \setminus \{\epsilon\}$, más $FOLLOW(A)$ cuando $\epsilon \in FIRST(\alpha)$. La entrada $M[A,a]$ contiene la producción cuyo conjunto de selección incluye al terminal $a$. La Tabla~\ref{tab:select} numera las producciones y entrega sus conjuntos de selección, y la Tabla~\ref{tab:ll1} muestra la tabla predictiva resultante.
 
-Tras la construcción y verificación automatizada mediante el script \texttt{src/utils/first\_follow.py}, se concluye lo siguiente:
+{\small
+\begin{longtable}{|c|>{\raggedright\arraybackslash}p{7.2cm}|>{\raggedright\arraybackslash}p{5.2cm}|}
+\caption{Producciones numeradas y conjuntos de selección}\label{tab:select}\\
+\hline \textbf{N.º} & \textbf{Producción} & \textbf{Selección}\\ \hline
+\endfirsthead
+\hline \textbf{N.º} & \textbf{Producción} & \textbf{Selección}\\ \hline
+\endhead
+\hline
+\endfoot
+1 & \textit{Prog} $\to$ \textit{Regla} \textit{Prog} & \{WHEN\}\\ \hline
+2 & \textit{Prog} $\to$ $\epsilon$ & \{\$\}\\ \hline
+3 & \textit{Regla} $\to$ \texttt{WHEN} \textit{Cond} \texttt{THEN} \textit{ListaAcciones} \textit{ElsePart} \texttt{PUNTO\_COMA} & \{WHEN\}\\ \hline
+4 & \textit{ElsePart} $\to$ \texttt{ELSE} \textit{ListaAcciones} & \{ELSE\}\\ \hline
+5 & \textit{ElsePart} $\to$ $\epsilon$ & \{PUNTO\_COMA\}\\ \hline
+6 & \textit{Cond} $\to$ \textit{OrExpr} & \{NOT, TRUE, FALSE, NUM, ID\}\\ \hline
+7 & \textit{OrExpr} $\to$ \textit{AndExpr} \textit{OrTail} & \{NOT, TRUE, FALSE, NUM, ID\}\\ \hline
+8 & \textit{OrTail} $\to$ \texttt{OR} \textit{AndExpr} \textit{OrTail} & \{OR\}\\ \hline
+9 & \textit{OrTail} $\to$ $\epsilon$ & \{THEN\}\\ \hline
+10 & \textit{AndExpr} $\to$ \textit{NotExpr} \textit{AndTail} & \{NOT, TRUE, FALSE, NUM, ID\}\\ \hline
+11 & \textit{AndTail} $\to$ \texttt{AND} \textit{NotExpr} \textit{AndTail} & \{AND\}\\ \hline
+12 & \textit{AndTail} $\to$ $\epsilon$ & \{THEN, OR\}\\ \hline
+13 & \textit{NotExpr} $\to$ \texttt{NOT} \textit{NotExpr} & \{NOT\}\\ \hline
+14 & \textit{NotExpr} $\to$ \textit{RelExpr} & \{TRUE, FALSE, NUM, ID\}\\ \hline
+15 & \textit{RelExpr} $\to$ \textit{Factor} \textit{RelExprTail} & \{TRUE, FALSE, NUM, ID\}\\ \hline
+16 & \textit{RelExprTail} $\to$ \texttt{OP\_REL} \textit{Factor} & \{OP\_REL\}\\ \hline
+17 & \textit{RelExprTail} $\to$ $\epsilon$ & \{THEN, AND, OR\}\\ \hline
+18 & \textit{Factor} $\to$ \texttt{NUM} & \{NUM\}\\ \hline
+19 & \textit{Factor} $\to$ \texttt{ID} & \{ID\}\\ \hline
+20 & \textit{Factor} $\to$ \texttt{TRUE} & \{TRUE\}\\ \hline
+21 & \textit{Factor} $\to$ \texttt{FALSE} & \{FALSE\}\\ \hline
+22 & \textit{ListaAcciones} $\to$ \textit{Accion} \textit{AccionTail} & \{ID\}\\ \hline
+23 & \textit{AccionTail} $\to$ \texttt{COMA} \textit{Accion} \textit{AccionTail} & \{COMA\}\\ \hline
+24 & \textit{AccionTail} $\to$ $\epsilon$ & \{ELSE, PUNTO\_COMA\}\\ \hline
+25 & \textit{Accion} $\to$ \texttt{ID} \textit{AsigOrCall} & \{ID\}\\ \hline
+26 & \textit{AsigOrCall} $\to$ \texttt{IGUAL} \textit{Factor} & \{IGUAL\}\\ \hline
+27 & \textit{AsigOrCall} $\to$ \texttt{ID} \textit{AsigTail} & \{ID\}\\ \hline
+28 & \textit{AsigOrCall} $\to$ \texttt{NUM} & \{NUM\}\\ \hline
+29 & \textit{AsigOrCall} $\to$ \texttt{TRUE} & \{TRUE\}\\ \hline
+30 & \textit{AsigOrCall} $\to$ \texttt{FALSE} & \{FALSE\}\\ \hline
+31 & \textit{AsigOrCall} $\to$ $\epsilon$ & \{ELSE, COMA, PUNTO\_COMA\}\\ \hline
+32 & \textit{AsigTail} $\to$ \texttt{IGUAL} \textit{Factor} & \{IGUAL\}\\ \hline
+33 & \textit{AsigTail} $\to$ $\epsilon$ & \{ELSE, COMA, PUNTO\_COMA\}\\ \hline
+\end{longtable}
+}
 
+\begin{table}[H]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{|l|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+\textbf{M} & \rotatebox{90}{\scriptsize WHEN} & \rotatebox{90}{\scriptsize THEN} & \rotatebox{90}{\scriptsize ELSE} & \rotatebox{90}{\scriptsize AND} & \rotatebox{90}{\scriptsize OR} & \rotatebox{90}{\scriptsize NOT} & \rotatebox{90}{\scriptsize TRUE} & \rotatebox{90}{\scriptsize FALSE} & \rotatebox{90}{\scriptsize NUM} & \rotatebox{90}{\scriptsize ID} & \rotatebox{90}{\scriptsize OP\_REL} & \rotatebox{90}{\scriptsize IGUAL} & \rotatebox{90}{\scriptsize COMA} & \rotatebox{90}{\scriptsize PUNTO\_COMA} & \rotatebox{90}{\scriptsize \$}\\ \hline
+\textit{Prog} & 1 &  &  &  &  &  &  &  &  &  &  &  &  &  & 2\\ \hline
+\textit{Regla} & 3 &  &  &  &  &  &  &  &  &  &  &  &  &  & \\ \hline
+\textit{ElsePart} &  &  & 4 &  &  &  &  &  &  &  &  &  &  & 5 & \\ \hline
+\textit{Cond} &  &  &  &  &  & 6 & 6 & 6 & 6 & 6 &  &  &  &  & \\ \hline
+\textit{OrExpr} &  &  &  &  &  & 7 & 7 & 7 & 7 & 7 &  &  &  &  & \\ \hline
+\textit{OrTail} &  & 9 &  &  & 8 &  &  &  &  &  &  &  &  &  & \\ \hline
+\textit{AndExpr} &  &  &  &  &  & 10 & 10 & 10 & 10 & 10 &  &  &  &  & \\ \hline
+\textit{AndTail} &  & 12 &  & 11 & 12 &  &  &  &  &  &  &  &  &  & \\ \hline
+\textit{NotExpr} &  &  &  &  &  & 13 & 14 & 14 & 14 & 14 &  &  &  &  & \\ \hline
+\textit{RelExpr} &  &  &  &  &  &  & 15 & 15 & 15 & 15 &  &  &  &  & \\ \hline
+\textit{RelExprTail} &  & 17 &  & 17 & 17 &  &  &  &  &  & 16 &  &  &  & \\ \hline
+\textit{Factor} &  &  &  &  &  &  & 20 & 21 & 18 & 19 &  &  &  &  & \\ \hline
+\textit{ListaAcciones} &  &  &  &  &  &  &  &  &  & 22 &  &  &  &  & \\ \hline
+\textit{AccionTail} &  &  & 24 &  &  &  &  &  &  &  &  &  & 23 & 24 & \\ \hline
+\textit{Accion} &  &  &  &  &  &  &  &  &  & 25 &  &  &  &  & \\ \hline
+\textit{AsigOrCall} &  &  & 31 &  &  &  & 29 & 30 & 28 & 27 &  & 26 & 31 & 31 & \\ \hline
+\textit{AsigTail} &  &  & 33 &  &  &  &  &  &  &  &  & 32 & 33 & 33 & \\ \hline
+\end{tabular}
+\caption{Tabla predictiva LL(1): cada celda contiene el número de la producción de la Tabla~\ref{tab:select}; las celdas vacías indican error sintáctico}
+\label{tab:ll1}
+\end{table}
+
+Una gramática es LL(1) si y solo si, para cada no terminal con varias alternativas, sus conjuntos de selección son disjuntos de a pares. Se verificó con el script \texttt{first\_follow.py} (carpeta \texttt{src/utils/}) y se concluye:
 \begin{itemize}[leftmargin=1cm]
-    \item La gramática cumple con las condiciones para pertenecer a la clase \textbf{LL(1)}.
-    \item \textbf{No se detectaron conflictos} de tipo \textit{shift/reduce} ni \textit{reduce/reduce}.
-    \item La tabla predictiva es determinista para todos los pares $(NoTerminal, Terminal)$ presentes.
+    \item La gramática cumple las condiciones de la clase \textbf{LL(1)}: ninguna celda $M[A,a]$ recibe más de una producción.
+    \item \textbf{No hay conflictos} FIRST/FIRST (alternativas que comparten un terminal inicial) ni FIRST/FOLLOW (una alternativa con $\epsilon$ cuyo FOLLOW coincide con el FIRST de otra alternativa).
+    \item La tabla predictiva es determinista para todos los pares $(NoTerminal, Terminal)$.
+    \item El conflicto FIRST/FIRST de la versión inicial (Sección 3.3.2) quedó eliminado: $M[Accion, ID]$ contiene únicamente la producción 25.
 \end{itemize}
 
 El análisis completo puede reproducirse ejecutando:
@@ -383,16 +516,16 @@ Se ha adoptado una \textbf{arquitectura limpia y modular}, separando responsabil
 \centering
 \begin{lstlisting}[style=grammartyle]
 proyecto_teoria1/
-├── src/
-│   ├── lexer/      # Analizador Léxico
-│   ├── parser/     # Analizador Sintáctico LL(1) Descendente Recursivo
-│   ├── ast/        # Nodos del Árbol Sintáctico Abstracto
-│   └── utils/      # Cálculo de FIRST/FOLLOW, visualización AST
-├── tests/          # Suite de pruebas unitarias e integradas
-├── ejemplos/       # Archivos .sr con casos válidos e inválidos
-├── docs/           # Documentación, gramática e informe LaTeX
-├── main.py         # Punto de entrada CLI (interactivo y por archivo)
-└── README.md       # Guía de ejecución y documentación
+|-- src/
+|   |-- lexer/      # Analizador Léxico
+|   |-- parser/     # Analizador Sintáctico LL(1) Descendente Recursivo
+|   |-- ast/        # Nodos del Árbol Sintáctico Abstracto
+|   `-- utils/      # Cálculo de FIRST/FOLLOW, visualización AST
+|-- tests/          # Suite de pruebas unitarias e integradas
+|-- ejemplos/       # Archivos .sr con casos válidos e inválidos
+|-- docs/           # Documentación, gramática e informe LaTeX
+|-- main.py         # Punto de entrada CLI (interactivo y por archivo)
+`-- README.md       # Guía de ejecución y documentación
 \end{lstlisting}
 \caption{Estructura del proyecto con arquitectura limpia}
 \label{fig:estructura}
@@ -417,8 +550,8 @@ El parser ha sido \textbf{implementado íntegramente desde cero}, sin utilizar g
 
 \textbf{Características:}
 \begin{itemize}[leftmargin=1cm]
-    \item Un método \texttt{parse\_*()} por cada no-terminal de la gramática.
-    \item Uso de un índice (\texttt{pos}) para recorrer la lista de tokens.
+    \item Un método \texttt{parse\_*()} por cada no-terminal de la gramática (incluidos los métodos de \textit{AsigOrCall} y \textit{AsigTail}, que implementan la factorización de la Sección 3.3.2).
+    \item Uso de un índice (\texttt{pos}) para recorrer la lista de tokens y de \textbf{un solo token de anticipación}: cada decisión corresponde a una celda de la Tabla~\ref{tab:ll1}, sin retroceso (\textit{backtracking}).
     \item Métodos auxiliares \texttt{actual()}, \texttt{avanzar()} y \texttt{consumir()}.
     \item Manejo correcto de recursión por la derecha para \textit{tails}.
     \item Soporte para la cláusula \texttt{ELSE} opcional.
@@ -464,7 +597,8 @@ Se implementó un sistema robusto de detección de errores con el objetivo de gu
 
 \begin{itemize}[leftmargin=1cm]
     \item \textbf{Errores Léxicos (\texttt{LexerError}):} Detecta caracteres o símbolos no pertenecientes al alfabeto del lenguaje.
-    \item \textbf{Errores Sintácticos (\texttt{ParserError}):} Detecta estructuras inválidas indicando claramente: \textit{``Se esperaba 'X', se encontró 'Y' con lexema 'Z'''}. Esto facilita enormemente la depuración.
+    \item \textbf{Errores Sintácticos (\texttt{ParserError}):} Detecta estructuras inválidas indicando qué se esperaba, qué se encontró y \textbf{dónde} (número de token, línea y columna), por ejemplo: \textit{``se esperaba THEN, se encontró 'encender'''}. Esto facilita enormemente la depuración.
+    \item Los errores léxicos también informan la línea y la columna del símbolo no reconocido.
 \end{itemize}
 
 \newpage
@@ -492,7 +626,7 @@ Donde \texttt{-t} muestra los tokens generados y \texttt{-a} muestra el AST cons
 python -m src.utils.first_follow
 \end{lstlisting}
 
-\subsection{Suite de Pruebas}
+\subsection{Suite de Pruebas Automatizadas}
 Se diseñó una batería de pruebas completa para validar tanto el análisis léxico como el sintáctico. Las pruebas se encuentran organizadas en la carpeta \texttt{tests/}.
 
 \begin{table}[H]
@@ -514,29 +648,59 @@ Se diseñó una batería de pruebas completa para validar tanto el análisis lé
 \label{tab:tests}
 \end{table}
 
+\subsection{Casos de Prueba Documentados}
+\label{sec:casos}
+Además de la suite automatizada, se documentan 25 casos: 10 sintácticamente válidos (\texttt{V1}--\texttt{V10}), 10 inválidos (\texttt{I1}--\texttt{I10}) y 5 casos límite (\texttt{L1}--\texttt{L5}). La columna \textit{Obtenido} muestra el resultado del analizador, con la columna donde se detecta el error. En los 25 casos el resultado obtenido coincide con el esperado.
+
+{\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{|l|>{\raggedright\arraybackslash}p{4.5cm}|c|>{\raggedright\arraybackslash}p{4.3cm}|>{\raggedright\arraybackslash}p{3.4cm}|}
+\caption{Casos de prueba documentados (10 válidos, 10 inválidos y 5 límite)}\label{tab:casos}\\
+\hline
+\textbf{N.º} & \textbf{Entrada} & \textbf{Esperado} & \textbf{Obtenido} & \textbf{Observación}\\ \hline
+\endfirsthead
+\hline
+\textbf{N.º} & \textbf{Entrada} & \textbf{Esperado} & \textbf{Obtenido} & \textbf{Observación}\\ \hline
+\endhead
+\hline \multicolumn{5}{r}{\textit{continúa en la página siguiente}}\\
+\endfoot
+\hline
+\endlastfoot
+V1 & \texttt{WHEN temperatura \textgreater{} 28 AND humedad \textless{} 40 THEN encender ventilador;} & Acepta & Aceptada & Condición compuesta con AND; acción con argumento.\\ \hline
+V2 & \texttt{WHEN luz == 0 OR movimiento == TRUE THEN encender luces, alarma = 1 ELSE apagar luces;} & Acepta & Aceptada & OR, múltiples acciones, asignación y cláusula ELSE.\\ \hline
+V3 & \texttt{WHEN NOT puerta\_abierta THEN activar\_alarma;} & Acepta & Aceptada & Negación NOT sobre un factor; acción sin argumento.\\ \hline
+V4 & \texttt{WHEN nivel\_agua \textgreater{}= 80 THEN bomba = 1, notificar\_app;} & Acepta & Aceptada & Operador \textgreater{}=; asignación seguida de llamada.\\ \hline
+V5 & \texttt{WHEN presion \textless{} 10 AND NOT emergencia THEN abrir\_valvula;} & Acepta & Aceptada & NOT dentro de una conjunción.\\ \hline
+V6 & \texttt{WHEN humedad \textless{}= 30 THEN encender riego = 100;} & Acepta & Aceptada & Asignación con objeto (ID ID = valor).\\ \hline
+V7 & \texttt{WHEN movimiento == TRUE THEN activar alarma; WHEN luz \textless{} 5 THEN encender luces;} & Acepta & Aceptada & Dos reglas en la misma entrada.\\ \hline
+V8 & \texttt{WHEN a == 1 OR b == 2 AND c != 3 THEN x = 1 ELSE x = 0;} & Acepta & Aceptada & Precedencia AND sobre OR; operador !=; ELSE con asignación.\\ \hline
+V9 & \texttt{WHEN NOT NOT activo THEN apagar;} & Acepta & Aceptada & NOT anidado.\\ \hline
+V10 & \texttt{WHEN bateria \textless{} 20 THEN volver\_base, aterrizar, notificar operador;} & Acepta & Aceptada & Tres acciones separadas por coma.\\ \hline
+I1 & \texttt{WHEN temperatura \textgreater{} THEN encender ventilador;} & Rechaza & Rechazada (col.~20): se esperaba un factor, se encontró \texttt{THEN} & Falta operando tras el operador relacional.\\ \hline
+I2 & \texttt{temperatura \textgreater{} 28 THEN encender luces;} & Rechaza & Rechazada (col.~1): se esperaba la palabra reservada WHEN o el fin de la entrada, se encontró \texttt{temperatura} & Falta la palabra reservada WHEN.\\ \hline
+I3 & \texttt{WHEN temperatura \textgreater{} 28 encender luces;} & Rechaza & Rechazada (col.~23): se esperaba THEN, se encontró \texttt{encender} & Falta la palabra reservada THEN.\\ \hline
+I4 & \texttt{WHEN AND humedad \textless{} 40 THEN encender ventilador;} & Rechaza & Rechazada (col.~6): se esperaba un factor, se encontró \texttt{AND} & Condición que empieza con operador lógico.\\ \hline
+I5 & \texttt{WHEN temperatura \textgreater{} 28 THEN ;} & Rechaza & Rechazada (col.~28): se esperaba el nombre de una acción (ID), se encontró \texttt{;} & Lista de acciones vacía.\\ \hline
+I6 & \texttt{WHEN temperatura \textgreater{} 28 THEN accion1,, accion2;} & Rechaza & Rechazada (col.~36): se esperaba el nombre de una acción (ID), se encontró \texttt{,} & Coma duplicada.\\ \hline
+I7 & \texttt{WHEN temperatura \textgreater{} 28 THEN encender ventilador} & Rechaza & Rechazada (col.~47): se esperaba \texttt{;} al final de la regla, se encontró fin de la entrada & Falta el punto y coma final.\\ \hline
+I8 & \texttt{WHEN temperatura \textgreater{} 28 \textgreater{} 30 THEN encender ventilador;} & Rechaza & Rechazada (col.~23): se esperaba THEN, se encontró \texttt{\textgreater{}} & Comparación encadenada no permitida.\\ \hline
+I9 & \texttt{WHEN luz == 0 THEN encender luces ELSE ;} & Rechaza & Rechazada (col.~40): se esperaba el nombre de una acción (ID), se encontró \texttt{;} & ELSE sin acciones.\\ \hline
+I10 & \texttt{WHEN luz == 0 THEN encender luces, ;} & Rechaza & Rechazada (col.~36): se esperaba el nombre de una acción (ID), se encontró \texttt{;} & Coma final sin acción.\\ \hline
+L1 & \textit{(entrada vacía)} & Acepta & Aceptada & Programa vacío: Prog deriva la cadena vacía.\\ \hline
+L2 & \texttt{WHEN x THEN a;} & Acepta & Aceptada & Regla mínima: condición con un solo factor.\\ \hline
+L3 & \texttt{WHEN NOT NOT NOT x THEN a;} & Acepta & Aceptada & Tres NOT consecutivos.\\ \hline
+L4 & \texttt{WHEN x THEN a; WHEN} & Rechaza & Rechazada (col.~20): se esperaba un factor, se encontró fin de la entrada & Entrada truncada: termina en medio de una regla.\\ \hline
+L5 & \texttt{WHEN x \# 3 THEN a;} & Rechaza & Rechazada (col.~8): error léxico, símbolo no reconocido \texttt{\#} & Carácter fuera del alfabeto (error léxico).\\ \hline
+\end{longtable}
+}
+
 \subsection{Resultados de las Pruebas}
-Las pruebas fueron ejecutadas con \texttt{unittest} desde el terminal integrado de Visual Studio Code:
+Las pruebas automatizadas fueron ejecutadas con \texttt{unittest} desde el terminal integrado de Visual Studio Code (Figura~\ref{fig:vscode_pruebas_real}, Anexo~E).
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{imagenes/vscode_pruebas_real.png}
-\caption{Ejecución de pruebas en el terminal integrado de VS Code}
-\label{fig:vscode_pruebas_real}
-\end{figure}
-
-\textbf{Resultado:} \texttt{Ran 26 tests in 0.002s OK} – Todas las pruebas pasaron exitosamente.
+\textbf{Resultado:} \texttt{Ran 26 tests in 0.002s OK} -- todas las pruebas pasaron exitosamente.
 
 \subsection{Ejemplo de Salida del Analizador}
-Al analizar el archivo \texttt{ejemplos/validos\_1.sr} desde el terminal integrado de Visual Studio Code:
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{imagenes/vscode_ejecucion_real.png}
-\caption{Ejecución del analizador en el terminal integrado de VS Code}
-\label{fig:vscode_ejecucion_real}
-\end{figure}
-
-Al analizar un archivo válido, el sistema confirma el éxito del análisis y muestra el AST:
+Al analizar el archivo \texttt{ejemplos/validos\_1.sr} (capturas en la Figura~\ref{fig:vscode_ejecucion_real}, Anexo~E), el sistema confirma el éxito del análisis:
 
 \begin{lstlisting}[style=grammartyle, caption={Salida exitosa del analizador}]
 ============================================================
@@ -551,27 +715,43 @@ WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
 [OK] ANALISIS SINTACTICO EXITOSO
 
 Se reconocieron 5 regla(s) valida(s).
+\end{lstlisting}
 
-============================================================
-ARBOL SINTACTICO ABSTRACTO (AST)
-============================================================
+El AST completo de la primera regla del archivo (\texttt{V1}) es el siguiente: la condición es una conjunción de dos comparaciones y la acción es una llamada con un argumento, sin cláusula \texttt{ELSE}.
 
+\begin{lstlisting}[style=grammartyle, caption={AST de la regla \texttt{WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;}}]
 Programa
     +-- Regla
         +-- Condicion:
             +-- BinOp(AND)
-                ...
+                +-- BinOp(>)
+                    +-- Identificador(temperatura)
+                    +-- Literal(28)
+                +-- BinOp(<)
+                    +-- Identificador(humedad)
+                    +-- Literal(40)
         +-- AccionesTHEN:
             +-- ListaAcciones
-                ...
+                +-- LlamadaAccion
+                    +-- Identificador(encender)
+                    +-- Identificador(ventilador)
         +-- AccionesELSE: None
 \end{lstlisting}
 
-Al analizar un archivo inválido, el sistema reporta el error de forma clara:
+Al analizar entradas inválidas, el sistema reporta el error indicando lo esperado, lo encontrado y su posición:
 
-\begin{lstlisting}[style=grammartyle, caption={Detección de error sintáctico}]
-[ERROR] ERROR SINTACTICO: Error sintáctico en token ('THEN', 'THEN'): 
-Se esperaba un factor (NUM, ID, TRUE, FALSE), se encontró 'THEN' 'THEN'
+\begin{lstlisting}[style=grammartyle, caption={Detección de errores léxicos y sintácticos}]
+Entrada: WHEN temperatura > THEN encender ventilador;
+Error sintáctico (token 4, línea 1, columna 20): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'THEN'
+
+Entrada: WHEN temperatura > 28 encender luces;
+Error sintáctico (token 5, línea 1, columna 23): se esperaba THEN, se encontró 'encender'
+
+Entrada: WHEN temperatura > 28 THEN encender ventilador
+Error sintáctico (token 8, línea 1, columna 47): se esperaba ';' al final de la regla, se encontró fin de la entrada
+
+Entrada: WHEN x # 3 THEN a;
+Error léxico (línea 1, columna 8): símbolo no reconocido '#'
 \end{lstlisting}
 
 \newpage
@@ -583,12 +763,12 @@ Tras la realización del proyecto, se obtienen las siguientes conclusiones:
 
 \begin{itemize}[leftmargin=1cm]
     \item \textbf{Cumplimiento de objetivos:} Se logró diseñar e implementar un analizador sintáctico LL(1) funcional para el DSL \textit{SmartRule}, cumpliendo con todos los objetivos planteados.
-    \item \textbf{Gramática correcta:} La GLC diseñada es correcta, no ambigua, respeta la precedencia de operadores y cumple con las condiciones para ser LL(1). No se presentan conflictos en la tabla predictiva.
+    \item \textbf{Gramática correcta:} La GLC diseñada es correcta, no ambigua, respeta la precedencia de operadores y cumple con las condiciones para ser LL(1). El análisis detectó un conflicto FIRST/FIRST en la producción de acciones, que se resolvió por factorización a la izquierda; la tabla final no presenta conflictos.
     \item \textbf{Análisis formal completo:} Se calcularon, documentaron y justificaron los conjuntos \textit{FIRST} y \textit{FOLLOW}, así como la construcción de la tabla LL(1).
-    \item \textbf{Implementación propia:} Tanto el analizador léxico como el parser LL(1) descendente recursivo fueron desarrollados íntegramente por el grupo, sin el uso de generadores automáticos.
+    \item \textbf{Implementación propia:} El parser LL(1) descendente recursivo fue desarrollado íntegramente por el grupo, sin el uso de generadores automáticos; el analizador léxico se extendió a partir del cuaderno base entregado por el docente.
     \item \textbf{Representación sintáctica:} Se construyó un AST claro y jerárquico, lo que permite visualizar correctamente la estructura de cada regla.
     \item \textbf{Manejo de errores eficaz:} El sistema detecta y reporta errores léxicos y sintácticos con mensajes precisos, facilitando la corrección por parte del usuario.
-    \item \textbf{Calidad y robustez:} La suite con 26 pruebas automatizadas valida exitosamente casos válidos, inválidos, límite y de integración, garantizando el correcto funcionamiento.
+    \item \textbf{Calidad y robustez:} La suite con 26 pruebas automatizadas y los 25 casos documentados (10 válidos, 10 inválidos y 5 límite) validan exitosamente el correcto funcionamiento del analizador.
     \item \textbf{Arquitectura profesional:} Se aplicó una arquitectura limpia y modular, siguiendo buenas prácticas de programación en Python.
     \item \textbf{Documentación completa:} Se entregó documentación técnica detallada (\texttt{README.md}), gramática formal, informe en \LaTeX\ y ejemplos reproducibles.
 \end{itemize}
@@ -665,26 +845,24 @@ python -m unittest discover -s tests -v
 
 \subsection{Anexo C: Gramática Completa en Formato BNF}
 \begin{lstlisting}[style=grammartyle, caption={Gramática BNF completa de SmartRule}]
-<Prog>        ::= <Regla> <Prog> | ε
-<Regla>       ::= WHEN <Cond> THEN <ListaAcciones> <ElsePart> PUNTO_COMA
-<ElsePart>    ::= ELSE <ListaAcciones> | ε
-<Cond>        ::= <OrExpr>
-<OrExpr>      ::= <AndExpr> <OrTail>
-<OrTail>      ::= OR <AndExpr> <OrTail> | ε
-<AndExpr>     ::= <NotExpr> <AndTail>
-<AndTail>     ::= AND <NotExpr> <AndTail> | ε
-<NotExpr>     ::= NOT <NotExpr> | <RelExpr>
-<RelExpr>     ::= <Factor> <RelExprTail>
-<RelExprTail> ::= OP_REL <Factor> | ε
-<Factor>      ::= NUM | ID | TRUE | FALSE
-<ListaAcciones> ::= <Accion> <AccionTail>
-<AccionTail>    ::= COMA <Accion> <AccionTail> | ε
-<Accion>        ::= ID <AsigOrCall> | ID ID IGUAL <Factor>
-<AsigOrCall>    ::= IGUAL <Factor> | <Factor> | ε
+<Prog>           ::= <Regla> <Prog> | ε
+<Regla>          ::= WHEN <Cond> THEN <ListaAcciones> <ElsePart> PUNTO_COMA
+<ElsePart>       ::= ELSE <ListaAcciones> | ε
+<Cond>           ::= <OrExpr>
+<OrExpr>         ::= <AndExpr> <OrTail>
+<OrTail>         ::= OR <AndExpr> <OrTail> | ε
+<AndExpr>        ::= <NotExpr> <AndTail>
+<AndTail>        ::= AND <NotExpr> <AndTail> | ε
+<NotExpr>        ::= NOT <NotExpr> | <RelExpr>
+<RelExpr>        ::= <Factor> <RelExprTail>
+<RelExprTail>    ::= OP_REL <Factor> | ε
+<Factor>         ::= NUM | ID | TRUE | FALSE
+<ListaAcciones>  ::= <Accion> <AccionTail>
+<AccionTail>     ::= COMA <Accion> <AccionTail> | ε
+<Accion>         ::= ID <AsigOrCall>
+<AsigOrCall>     ::= IGUAL <Factor> | ID <AsigTail> | NUM | TRUE | FALSE | ε
+<AsigTail>       ::= IGUAL <Factor> | ε
 \end{lstlisting}
-
-
-
 
 \newpage
 \subsection{Anexo D: Derivación por la Izquierda}
@@ -697,63 +875,94 @@ WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
 \end{lstlisting}
 
 \subsubsection{Gramática utilizada}
-Se utiliza la gramática LL(1) definida en el Anexo C. Para mayor claridad, se listan las producciones relevantes:
-
-\begin{align}
-Prog        &\to Regla\ Prog \mid \epsilon\\
-Regla       &\to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\\
-ElsePart    &\to ELSE\ ListaAcciones \mid \epsilon\\
-Cond        &\to OrExpr\\
-OrExpr      &\to AndExpr\ OrTail\\
-OrTail      &\to OR\ AndExpr\ OrTail \mid \epsilon\\
-AndExpr     &\to NotExpr\ AndTail\\
-AndTail     &\to AND\ NotExpr\ AndTail \mid \epsilon\\
-NotExpr     &\to RelExpr\\
-RelExpr     &\to Factor\ RelExprTail\\
-RelExprTail &\to OP\_REL\ Factor \mid \epsilon\\
-Factor      &\to NUM \mid ID \mid TRUE \mid FALSE\\
-ListaAcciones &\to Accion\ AccionTail\\
-AccionTail    &\to COMA\ Accion\ AccionTail \mid \epsilon\\
-Accion        &\to ID\ AsigOrCall \mid ID\ ID\ IGUAL\ Factor\\
-AsigOrCall    &\to IGUAL\ Factor \mid Factor \mid \epsilon
-\end{align}
+Se utiliza la gramática LL(1) definida en el Anexo C; las producciones están numeradas en la Tabla~\ref{tab:select}.
 
 \subsubsection{Derivación por la izquierda}
-Símbolo inicial: $Prog$
+Símbolo inicial: $\mathit{Prog}$. En cada paso se expande el no terminal más a la izquierda; los no terminales se escriben en cursiva y los terminales en fuente monoespaciada (las producciones $\epsilon$ simplemente eliminan el no terminal). La derivación se generó siguiendo la tabla LL(1) con un token de anticipación.
 
-\begin{enumerate}[leftmargin=1cm]
-\item $Prog \underset{lm}{\Rightarrow} Regla\ Prog$ (por $Prog \to Regla\ Prog$)
-\item $Regla\ Prog \underset{lm}{\Rightarrow} WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Regla \to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA$)
-\item $WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ OrExpr\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Cond \to OrExpr$)
-\item $WHEN\ OrExpr\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ AndExpr\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $OrExpr \to AndExpr\ OrTail$)
-\item $WHEN\ AndExpr\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AndExpr \to NotExpr\ AndTail$)
-\item $WHEN\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $NotExpr \to RelExpr$)
-\item $WHEN\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExpr \to Factor\ RelExprTail$)
-\item $WHEN\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{temperatura})
-\item $WHEN\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExprTail \to OP\_REL\ Factor$, \texttt{>})
-\item $WHEN\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to NUM$, \texttt{28})
-\item $WHEN\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AndTail \to AND\ NotExpr\ AndTail$)
-\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $NotExpr \to RelExpr$)
-\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExpr \to Factor\ RelExprTail$)
-\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{humedad})
-\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExprTail \to OP\_REL\ Factor$, \texttt{<})
-\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to NUM$, \texttt{40})
-\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ \epsilon\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \equiv WHEN\ temperatura > 28\ AND\ humedad < 40\ OrTail\ THEN\ ...$ (por $AndTail \to \epsilon$)
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ \epsilon\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $OrTail \to \epsilon$)
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ Accion\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $ListaAcciones \to Accion\ AccionTail$)
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ Accion\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ AsigOrCall\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Accion \to ID\ AsigOrCall$)
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ AsigOrCall\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ Factor\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AsigOrCall \to Factor$)
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ Factor\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ ID\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{ventilador})
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ ID\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ \epsilon\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AccionTail \to \epsilon$)
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ \epsilon\ PUNTO\_COMA\ Prog$ (por $ElsePart \to \epsilon$)
-\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador;\ \epsilon$ (por $Prog \to \epsilon$)
+{\small\sloppy
+\begin{enumerate}[leftmargin=1.2cm, itemsep=3pt]
+\item $\mathit{Prog} \to \mathit{Regla}\ \mathit{Prog}$ (producción 1)\\
+$\underset{lm}{\Rightarrow}$\ \textit{Regla}\ \textit{Prog}
+\item $\mathit{Regla} \to \mathtt{WHEN}\ \mathit{Cond}\ \mathtt{THEN}\ \mathit{ListaAcciones}\ \mathit{ElsePart}\ \mathtt{PUNTO\_COMA}$ (producción 3)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \textit{Cond}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{Cond} \to \mathit{OrExpr}$ (producción 6)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \textit{OrExpr}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{OrExpr} \to \mathit{AndExpr}\ \mathit{OrTail}$ (producción 7)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \textit{AndExpr}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{AndExpr} \to \mathit{NotExpr}\ \mathit{AndTail}$ (producción 10)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \textit{NotExpr}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{NotExpr} \to \mathit{RelExpr}$ (producción 14)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \textit{RelExpr}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{RelExpr} \to \mathit{Factor}\ \mathit{RelExprTail}$ (producción 15)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \textit{Factor}\ \textit{RelExprTail}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{Factor} \to \mathtt{ID}$ (producción 19)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \textit{RelExprTail}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{RelExprTail} \to \mathtt{OP\_REL}\ \mathit{Factor}$ (producción 16)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \textit{Factor}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{Factor} \to \mathtt{NUM}$ (producción 18)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{AndTail} \to \mathtt{AND}\ \mathit{NotExpr}\ \mathit{AndTail}$ (producción 11)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \textit{NotExpr}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{NotExpr} \to \mathit{RelExpr}$ (producción 14)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \textit{RelExpr}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{RelExpr} \to \mathit{Factor}\ \mathit{RelExprTail}$ (producción 15)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \textit{Factor}\ \textit{RelExprTail}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{Factor} \to \mathtt{ID}$ (producción 19)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \textit{RelExprTail}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{RelExprTail} \to \mathtt{OP\_REL}\ \mathit{Factor}$ (producción 16)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \textit{Factor}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{Factor} \to \mathtt{NUM}$ (producción 18)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \textit{AndTail}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{AndTail} \to \epsilon$ (producción 12)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \textit{OrTail}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{OrTail} \to \epsilon$ (producción 9)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \textit{ListaAcciones}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{ListaAcciones} \to \mathit{Accion}\ \mathit{AccionTail}$ (producción 22)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \textit{Accion}\ \textit{AccionTail}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{Accion} \to \mathtt{ID}\ \mathit{AsigOrCall}$ (producción 25)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \texttt{ID}\ \textit{AsigOrCall}\ \textit{AccionTail}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{AsigOrCall} \to \mathtt{ID}\ \mathit{AsigTail}$ (producción 27)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \texttt{ID}\ \texttt{ID}\ \textit{AsigTail}\ \textit{AccionTail}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{AsigTail} \to \epsilon$ (producción 33)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \texttt{ID}\ \texttt{ID}\ \textit{AccionTail}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{AccionTail} \to \epsilon$ (producción 24)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \texttt{ID}\ \texttt{ID}\ \textit{ElsePart}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{ElsePart} \to \epsilon$ (producción 5)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \texttt{ID}\ \texttt{ID}\ \texttt{PUNTO\_COMA}\ \textit{Prog}
+\item $\mathit{Prog} \to \epsilon$ (producción 2)\\
+$\underset{lm}{\Rightarrow}$\ \texttt{WHEN}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{AND}\ \texttt{ID}\ \texttt{OP\_REL}\ \texttt{NUM}\ \texttt{THEN}\ \texttt{ID}\ \texttt{ID}\ \texttt{PUNTO\_COMA}
 \end{enumerate}
+}
 
 \subsubsection{Cadena derivada}
-\[
-WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador;
-\]
-
+La forma sentencial final es la secuencia de terminales
+\begin{center}
+\texttt{WHEN ID OP\_REL NUM AND ID OP\_REL NUM THEN ID ID PUNTO\_COMA}
+\end{center}
+que corresponde, en el mismo orden, a los lexemas
+\begin{center}
+\texttt{WHEN temperatura \textgreater{} 28 AND humedad \textless{} 40 THEN encender ventilador ;}
+\end{center}
 Por consiguiente, se demuestra que la sentencia pertenece al lenguaje generado por la gramática $G_{SmartRule}$ mediante derivación por la izquierda.
+
+\newpage
+\subsection{Anexo E: Demostración Funcional}
+\label{anexo:demo}
+Capturas de pantalla de la ejecución del proyecto.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{imagenes/vscode_pruebas_real.png}
+\caption{Ejecución de pruebas en el terminal integrado de VS Code}
+\label{fig:vscode_pruebas_real}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{imagenes/vscode_ejecucion_real.png}
+\caption{Ejecución del analizador en el terminal integrado de VS Code}
+\label{fig:vscode_ejecucion_real}
+\end{figure}
 
 \end{document}
