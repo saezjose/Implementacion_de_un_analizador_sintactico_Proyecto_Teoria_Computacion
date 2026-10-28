@@ -113,6 +113,14 @@ class TestParser(unittest.TestCase):
         parser = ParserLL1(tokens)
         with self.assertRaises(ParserError):
             parser.parse()
+    def test_programa_vacio(self):
+        ast = ParserLL1(analizador_lexico("")).parse()
+        self.assertEqual(len(ast.reglas), 0)
+
+    def test_not_no_es_operando(self):
+        for entrada in ("WHEN x > NOT y THEN a;", "WHEN x THEN a = NOT 1;"):
+            with self.assertRaises(ParserError):
+                ParserLL1(analizador_lexico(entrada)).parse()
 
 
 if __name__ == '__main__':

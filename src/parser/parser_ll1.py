@@ -383,7 +383,7 @@ class ParserLL1:
         if self.token_tipo(tok) == 'IGUAL':
             self.consumir('IGUAL')
             valor = self.parse_factor()
-            # Para encender luces = 100 según informe: usar Identificador con nombre compuesto
-            return Asignacion(Identificador(f"{nombre1} {nombre2}"), valor)
+            # encender luces = 100: la variable es el nombre compuesto (texto, igual que en la asignación simple)
+            return Asignacion(f"{nombre1} {nombre2}", valor)
         else:
             return LlamadaAccion(nombre1, Identificador(nombre2))

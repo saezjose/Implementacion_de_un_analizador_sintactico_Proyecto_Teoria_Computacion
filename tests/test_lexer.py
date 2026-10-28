@@ -43,6 +43,23 @@ class TestLexer(unittest.TestCase):
         with self.assertRaises(LexerError):
             analizador_lexico("WHEN x > 5 THEN accion@;")
 
+    def test_parentesis_no_reconocidos(self):
+        for entrada in ("WHEN (x) THEN a;", "WHEN x ) THEN a;"):
+            with self.assertRaises(LexerError) as ctx:
+                analizador_lexico(entrada)
+            self.assertIn("símbolo no reconocido", str(ctx.exception))
+        # formato exacto: línea y columna
+        with self.assertRaises(LexerError) as ctx:
+            analizador_lexico("WHEN (x) THEN a;")
+        self.assertEqual(str(ctx.exception),
+                         "Error léxico (línea 1, columna 6): símbolo no reconocido '('")
+
+    def test_formato_error_lexico_multilinea(self):
+        with self.assertRaises(LexerError) as ctx:
+            analizador_lexico("WHEN x THEN a;\nWHEN y # 1 THEN b;")
+        self.assertEqual(str(ctx.exception),
+                         "Error léxico (línea 2, columna 8): símbolo no reconocido '#'")
+
 
 if __name__ == '__main__':
     unittest.main()

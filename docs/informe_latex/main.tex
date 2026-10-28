@@ -635,13 +635,23 @@ Se diseñó una batería de pruebas completa para validar tanto el análisis lé
 \hline
 \textbf{Archivo} & \textbf{Cantidad} & \textbf{Objetivo} \\ 
 \hline
-\texttt{test\_lexer.py} & 5 & Tokens, palabras reservadas, operadores, \texttt{=}, \texttt{,}, errores léxicos. \\ 
+\texttt{test\_lexer.py} & 7 & Tokens, palabras reservadas, operadores, \texttt{=}, \texttt{,}, errores léxicos con su formato (línea y columna) y rechazo de paréntesis. \\ 
 \hline
-\texttt{test\_parser.py} & 15 & Reglas simples/complejas, \texttt{AND/OR/NOT}, \texttt{ELSE}, múltiples acciones, asignaciones, detección de errores sintácticos. \\ 
+\texttt{test\_parser.py} & 17 & Reglas simples/complejas, \texttt{AND/OR/NOT}, \texttt{ELSE}, múltiples acciones, asignaciones, programa vacío, \texttt{NOT} no válido como operando, detección de errores sintácticos. \\ 
 \hline
 \texttt{test\_integracion.py} & 6 & Casos completos por dominio (casa inteligente, dron, riego agrícola), todos los relacionales, \texttt{NOT} anidado, precedencia \texttt{AND}/\texttt{OR}. \\ 
 \hline
-\textbf{Total} & \textbf{26} & Cobertura amplia y variada \\ 
+\texttt{test\_casos\_informe.py} & 25 & Los 25 casos documentados en la Tabla~\ref{tab:casos} (10 válidos, 10 inválidos, 5 límite), con verificación del mensaje de error. \\ 
+\hline
+\texttt{test\_errores\_tarea4.py} & 7 & Modo pánico (varios errores), línea/columna en entradas multilínea y mensajes de error. \\ 
+\hline
+\texttt{test\_gramatica\_ll1.py} & 4 & Ausencia de conflictos LL(1), detección de conflicto en una gramática de juguete, FIRST/FOLLOW de \textit{Accion} y de \textit{NotExpr}. \\ 
+\hline
+\texttt{test\_ast\_forma.py} & 1 & Forma del AST y precedencia de \texttt{NOT} sobre \texttt{AND}. \\ 
+\hline
+\texttt{test\_casos.py} & 1 & Recorre los 32 casos de \texttt{tests/casos.py} (válidos, inválidos y límite). \\ 
+\hline
+\textbf{Total} & \textbf{68} & Cobertura amplia y variada \\ 
 \hline
 \end{tabular}
 \caption{Distribución de pruebas automatizadas}
@@ -697,7 +707,7 @@ L5 & \texttt{WHEN x \# 3 THEN a;} & Rechaza & Rechazada (col.~8): error léxico,
 \subsection{Resultados de las Pruebas}
 Las pruebas automatizadas fueron ejecutadas con \texttt{unittest} desde el terminal integrado de Visual Studio Code (Figura~\ref{fig:vscode_pruebas_real}, Anexo~E).
 
-\textbf{Resultado:} \texttt{Ran 26 tests in 0.002s OK} -- todas las pruebas pasaron exitosamente.
+\textbf{Resultado:} \texttt{Ran 68 tests} \dots\ \texttt{OK} -- todas las pruebas pasaron exitosamente.
 
 \subsection{Ejemplo de Salida del Analizador}
 Al analizar el archivo \texttt{ejemplos/validos\_1.sr} (capturas en la Figura~\ref{fig:vscode_ejecucion_real}, Anexo~E), el sistema confirma el éxito del análisis:
@@ -720,21 +730,21 @@ Se reconocieron 5 regla(s) valida(s).
 El AST completo de la primera regla del archivo (\texttt{V1}) es el siguiente: la condición es una conjunción de dos comparaciones y la acción es una llamada con un argumento, sin cláusula \texttt{ELSE}.
 
 \begin{lstlisting}[style=grammartyle, caption={AST de la regla \texttt{WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;}}]
-Programa
++-- Programa
     +-- Regla
         +-- Condicion:
             +-- BinOp(AND)
                 +-- BinOp(>)
                     +-- Identificador(temperatura)
-                    +-- Literal(28)
+                    +-- Literal(NUM=28)
                 +-- BinOp(<)
                     +-- Identificador(humedad)
-                    +-- Literal(40)
+                    +-- Literal(NUM=40)
         +-- AccionesTHEN:
             +-- ListaAcciones
-                +-- LlamadaAccion
-                    +-- Identificador(encender)
-                    +-- Identificador(ventilador)
+                +-- LlamadaAccion(encender)
+                    +-- argumento:
+                        +-- Identificador(ventilador)
         +-- AccionesELSE: None
 \end{lstlisting}
 
@@ -768,7 +778,7 @@ Tras la realización del proyecto, se obtienen las siguientes conclusiones:
     \item \textbf{Implementación propia:} El parser LL(1) descendente recursivo fue desarrollado íntegramente por el grupo, sin el uso de generadores automáticos; el analizador léxico se extendió a partir del cuaderno base entregado por el docente.
     \item \textbf{Representación sintáctica:} Se construyó un AST claro y jerárquico, lo que permite visualizar correctamente la estructura de cada regla.
     \item \textbf{Manejo de errores eficaz:} El sistema detecta y reporta errores léxicos y sintácticos con mensajes precisos, facilitando la corrección por parte del usuario.
-    \item \textbf{Calidad y robustez:} La suite con 26 pruebas automatizadas y los 25 casos documentados (10 válidos, 10 inválidos y 5 límite) validan exitosamente el correcto funcionamiento del analizador.
+    \item \textbf{Calidad y robustez:} La suite con 68 pruebas automatizadas, que incluye los 25 casos documentados (10 válidos, 10 inválidos y 5 límite), valida exitosamente el correcto funcionamiento del analizador.
     \item \textbf{Arquitectura profesional:} Se aplicó una arquitectura limpia y modular, siguiendo buenas prácticas de programación en Python.
     \item \textbf{Documentación completa:} Se entregó documentación técnica detallada (\texttt{README.md}), gramática formal, informe en \LaTeX\ y ejemplos reproducibles.
 \end{itemize}
