@@ -27,3 +27,7 @@ main_restored.tex
 tmp_main_*.tex
 main_old_tail.txt
 main_restored2.tex
+first_follow_out.txt
+first_follow_clean.txt
+gen_imgs.py
+*.synctex.gz
