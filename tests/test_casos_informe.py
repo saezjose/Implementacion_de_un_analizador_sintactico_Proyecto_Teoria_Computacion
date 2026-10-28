@@ -129,7 +129,7 @@ class TestCasosInforme(unittest.TestCase):
         with self.assertRaises(ParserError) as ctx:
             parser.parse()
         msg = str(ctx.exception)
-        self.assertIn("se esperaba una acción", msg)
+        self.assertIn("se esperaba el nombre de una acción (ID)", msg)
 
     def test_i7(self):
         entrada = "WHEN temperatura > 28 THEN encender ventilador"

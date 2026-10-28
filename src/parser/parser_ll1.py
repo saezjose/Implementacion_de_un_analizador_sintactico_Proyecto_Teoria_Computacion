@@ -72,6 +72,12 @@ class ParserLL1:
             return self.pos + 1
         return len(self.tokens) + 1
     
+    def encontrado(self, token):
+        """Texto usado en los mensajes: lo que realmente se encontró."""
+        if self.token_tipo(token) == 'EOF':
+            return 'fin de la entrada'
+        return f"'{self.token_lexema(token)}'"
+
     def avanzar(self):
         if self.pos < len(self.tokens):
             self.pos += 1
@@ -191,7 +197,7 @@ class ParserLL1:
         # Verificar THEN
         if self.token_tipo(self.actual()) != 'THEN':
             token = self.actual()
-            raise ParserError("se esperaba THEN", token, self.token_index())
+            raise ParserError(f"se esperaba THEN, se encontró {self.encontrado(token)}", token, self.token_index())
         self.consumir('THEN')
         acciones_then = self.parse_lista_acciones()
         acciones_else = self.parse_else_part()
@@ -263,14 +269,14 @@ class ParserLL1:
             self.consumir('OP_REL')
             tok = self.actual()
             if self.token_tipo(tok) == 'EOF':
-                raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE)", tok, self.token_index())
+                raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró fin de la entrada", tok, self.token_index())
             if self.token_tipo(tok) == 'THEN':
                 raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'THEN'", tok, self.token_index())
             if self.token_tipo(tok) == 'AND' or self.token_tipo(tok) == 'OR' or self.token_tipo(tok) == 'PUNTO_COMA':
                 raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró '" + self.token_lexema(tok) + "'", tok, self.token_index())
             if self.token_tipo(tok) == 'OP_REL':
                 raise ParserError("se esperaba THEN, se encontró '" + self.token_lexema(tok) + "'", tok, self.token_index())
-            if self.token_tipo(tok) not in ['NUM', 'ID', 'TRUE', 'FALSE', 'NOT']:
+            if self.token_tipo(tok) not in ['NUM', 'ID', 'TRUE', 'FALSE']:
                 raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró '" + self.token_lexema(tok) + "'", tok, self.token_index())
             factor2 = self.parse_factor()
             return BinOp(op, nodo_izq, factor2)
@@ -293,11 +299,9 @@ class ParserLL1:
         elif tipo == 'FALSE':
             self.consumir('FALSE')
             return Literal('FALSE', 'BOOL')
-        elif tipo == 'NOT':
-            return self.parse_not_expr()
         else:
             if tipo == 'EOF':
-                raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE)", token, self.token_index())
+                raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró fin de la entrada", token, self.token_index())
             if tipo == 'AND':
                 raise ParserError("se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'AND'", token, self.token_index())
             if tipo == 'THEN':
@@ -307,12 +311,8 @@ class ParserLL1:
     def parse_lista_acciones(self):
         """ListaAcciones -> Accion AccionTail"""
         tok = self.actual()
-        if self.token_tipo(tok) == 'ELSE':
-            raise ParserError("se esperaba al menos una acción después de THEN", tok, self.token_index())
-        if self.token_tipo(tok) == 'PUNTO_COMA':
-            raise ParserError("se esperaba al menos una acción después de THEN", tok, self.token_index())
-        if self.token_tipo(tok) == 'EOF':
-            raise ParserError("se esperaba al menos una acción después de THEN", tok, self.token_index())
+        if self.token_tipo(tok) in ('ELSE', 'PUNTO_COMA', 'EOF'):
+            raise ParserError(f"se esperaba el nombre de una acción (ID), se encontró {self.encontrado(tok)}", tok, self.token_index())
         try:
             accion = self.parse_accion()
         except ParserError:
@@ -330,12 +330,8 @@ class ParserLL1:
             coma_token = self.actual()
             self.consumir('COMA')
             tok = self.actual()
-            if self.token_tipo(tok) == 'COMA' or self.token_tipo(tok) == 'ELSE' or self.token_tipo(tok) == 'PUNTO_COMA' or self.token_tipo(tok) == 'EOF':
-                if self.token_tipo(tok) == 'PUNTO_COMA':
-                    raise ParserError("se esperaba el nombre de una acción (ID), se encontró ';'", tok, self.token_index())
-                if self.token_tipo(tok) == 'EOF':
-                    raise ParserError("se esperaba el nombre de una acción (ID), se encontró fin de la entrada", tok, self.token_index())
-                raise ParserError("se esperaba una acción después de ','", tok, self.token_index())
+            if self.token_tipo(tok) in ('COMA', 'ELSE', 'PUNTO_COMA', 'EOF'):
+                raise ParserError(f"se esperaba el nombre de una acción (ID), se encontró {self.encontrado(tok)}", tok, self.token_index())
             try:
                 accion = self.parse_accion()
             except ParserError:
@@ -348,17 +344,7 @@ class ParserLL1:
         """Accion -> ID AsigOrCall"""
         token = self.actual()
         if self.token_tipo(token) != 'ID':
-            lexema = self.token_lexema(token)
-            if self.token_tipo(token) == 'EOF':
-                raise ParserError("se esperaba el nombre de una acción (ID), se encontró fin de la entrada", token, self.token_index())
-            elif self.token_tipo(token) == 'COMA':
-                raise ParserError("se esperaba una acción después de ','", token, self.token_index())
-            elif self.token_tipo(token) == 'ELSE' or self.token_tipo(token) == 'PUNTO_COMA':
-                if self.token_tipo(token) == 'PUNTO_COMA':
-                    raise ParserError("se esperaba el nombre de una acción (ID), se encontró ';'", token, self.token_index())
-                raise ParserError("se esperaba al menos una acción después de THEN", token, self.token_index())
-            else:
-                raise ParserError(f"se esperaba el nombre de una acción (ID), se encontró '{lexema}'", token, self.token_index())
+            raise ParserError(f"se esperaba el nombre de una acción (ID), se encontró {self.encontrado(token)}", token, self.token_index())
         nombre1 = self.token_lexema(token)
         self.consumir('ID')
         return self.parse_asig_or_call(nombre1)

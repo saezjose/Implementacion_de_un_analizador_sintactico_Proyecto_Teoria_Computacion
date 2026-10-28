@@ -65,8 +65,6 @@ def analizador_lexico(cadena):
         ('IGUAL',      r'='),
         ('COMA',       r','),
         ('PUNTO_COMA', r';'),
-        ('PARENT_IZQ', r'\('),
-        ('PARENT_DER', r'\)'),
         ('ID',         r'[A-Za-z_][A-Za-z0-9_]*'),
         ('ESPACIO',    r'[ \t\n\r]+'),
         ('ERROR',      r'.')

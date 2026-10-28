@@ -54,7 +54,7 @@ class TestErroresTarea4(unittest.TestCase):
         parser = ParserLL1(tokens)
         with self.assertRaises(ParserError) as ctx:
             parser.parse(modo_panic=False)
-        self.assertIn("después de ','", str(ctx.exception))
+        self.assertIn("se esperaba el nombre de una acción", str(ctx.exception))
     
     def test_mensaje_lista_vacia(self):
         entrada = "WHEN x > 1 THEN ;"
@@ -62,7 +62,7 @@ class TestErroresTarea4(unittest.TestCase):
         parser = ParserLL1(tokens)
         with self.assertRaises(ParserError) as ctx:
             parser.parse(modo_panic=False)
-        self.assertIn("al menos una acción", str(ctx.exception))
+        self.assertIn("se esperaba el nombre de una acción", str(ctx.exception))
 
 
 if __name__ == '__main__':
