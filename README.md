@@ -1,70 +1,65 @@
-# Analizador Sintáctico para DSL "SmartRule"
+# Analizador Sintáctico LL(1) para el DSL "SmartRule"
 
-Proyecto de Teoría de la Computación - Analizador Léxico y Sintáctico LL(1)
+Proyecto de Teoría de la Computación (INFO1148) - Analizador léxico y sintáctico LL(1) descendente recursivo, con AST y manejo de errores.
 
 ## 1. Descripción del lenguaje
 
-**SmartRule** es un lenguaje de dominio específico (DSL) para definir reglas de automatización en sistemas IoT/smart home. Permite definir reglas condicionales con operadores lógicos, comparaciones relacionales y acciones a ejecutar.
+**SmartRule** es un lenguaje de dominio específico (DSL) para definir reglas de automatización en sistemas IoT y domótica.
 
-### Características
-- Reglas tipo `WHEN <condición> THEN <acción(es)> [ELSE <acción(es)>];`
-- Condiciones con operadores relacionales: `>`, `<`, `>=`, `<=`, `==`, `!=`
-- Operadores lógicos: `AND`, `OR`, `NOT`
-- Acciones: asignaciones `identificador = valor` o llamadas a acción `identificador [argumento]` o `identificador identificador = valor`
-- Valores: números enteros, identificadores, `TRUE`, `FALSE`
-- Múltiples acciones separadas por coma `,`
+- Reglas: `WHEN <condición> THEN <acciones> [ELSE <acciones>];`
+- Operadores relacionales: `>`, `<`, `>=`, `<=`, `==`, `!=`
+- Operadores lógicos: `AND`, `OR`, `NOT` (precedencia: `NOT` > `AND` > `OR`)
+- Acciones: asignación `variable = valor`, llamada `accion [argumento]` y asignación con objeto `accion objeto = valor`
+- Valores: números enteros, identificadores, `TRUE` y `FALSE`
+- Varias acciones separadas por coma y varias reglas por archivo
+- Cualquier otro símbolo (por ejemplo `#`, `@`, `(`, `)`) produce un error léxico
 
-### Formato de entrada
-- Archivos con extensión `.sr`
-- Palabras reservadas en mayúsculas: `WHEN`, `THEN`, `ELSE`, `AND`, `OR`, `NOT`, `TRUE`, `FALSE`
-- Punto y coma `;` obligatorio al final de cada regla
-
-### Ejemplo
-**Entrada:**
-```text
+### Ejemplos válidos
+```
 WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
+WHEN luz == 0 OR movimiento == TRUE THEN encender luces, alarma = 1 ELSE apagar luces;
+WHEN NOT puerta_abierta THEN activar_alarma;
+WHEN humedad <= 30 THEN encender riego = 100;
 ```
 
-**Salida:**
-```text
-============================================================
-ANALIZADOR SINTACTICO SMART RULE (LL(1))
-============================================================
-
-Entrada:
-WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
-
-[OK] ANALISIS LEXICO EXITOSO
-[OK] ANALISIS SINTACTICO EXITOSO
-
-Se reconocieron 1 regla(s) valida(s).
+### Ejemplos inválidos
+```
+WHEN temperatura > THEN encender ventilador;   # falta operando
+temperatura > 28 THEN encender luces;          # falta WHEN
+WHEN temperatura > 28 encender luces;          # falta THEN
+WHEN temperatura > 28 THEN ;                   # lista de acciones vacía
 ```
 
 ## 2. Arquitectura
 
 ```
 src/
-├── lexer/      # Analizador léxico
-├── ast/        # Nodos del Árbol Sintáctico Abstracto (AST)
-├── parser/     # Parser LL(1) descendente recursivo
-└── utils/      # Utilidades (FIRST/FOLLOW, visualización, exportadores)
+├── gramatica.py   # Gramática (fuente única de verdad)
+├── lexer/         # Analizador léxico
+├── ast/           # Nodos del AST
+├── parser/        # Parser LL(1) descendente recursivo
+└── utils/         # FIRST/FOLLOW/tabla LL(1), generación de tablas y grafo del AST
+tests/             # Suite de pruebas (68)
+ejemplos/          # Archivos .sr válidos, inválidos y límite
+docs/              # Gramática, tabla de casos e informe LaTeX
+main.py            # CLI
 ```
 
-## 3. Gramática Libre de Contexto (GLC)
+## 3. Gramática (LL(1), 33 producciones)
 
-```bnf
-Prog        -> Regla Prog | ε
-Regla       -> WHEN Cond THEN ListaAcciones ElsePart PUNTO_COMA
-ElsePart    -> ELSE ListaAcciones | ε
-Cond        -> OrExpr
-OrExpr      -> AndExpr OrTail
-OrTail      -> OR AndExpr OrTail | ε
-AndExpr     -> NotExpr AndTail
-AndTail     -> AND NotExpr AndTail | ε
-NotExpr     -> NOT NotExpr | RelExpr
-RelExpr     -> Factor RelExprTail
-RelExprTail -> OP_REL Factor | ε
-Factor      -> NUM | ID | TRUE | FALSE
+```
+Prog          -> Regla Prog | ε
+Regla         -> WHEN Cond THEN ListaAcciones ElsePart PUNTO_COMA
+ElsePart      -> ELSE ListaAcciones | ε
+Cond          -> OrExpr
+OrExpr        -> AndExpr OrTail
+OrTail        -> OR AndExpr OrTail | ε
+AndExpr       -> NotExpr AndTail
+AndTail       -> AND NotExpr AndTail | ε
+NotExpr       -> NOT NotExpr | RelExpr
+RelExpr       -> Factor RelExprTail
+RelExprTail   -> OP_REL Factor | ε
+Factor        -> NUM | ID | TRUE | FALSE
 ListaAcciones -> Accion AccionTail
 AccionTail    -> COMA Accion AccionTail | ε
 Accion        -> ID AsigOrCall
@@ -72,61 +67,42 @@ AsigOrCall    -> IGUAL Factor | ID AsigTail | NUM | TRUE | FALSE | ε
 AsigTail      -> IGUAL Factor | ε
 ```
 
-Ver `docs/gramatica.md` para detalles completos, FIRST/FOLLOW, tabla LL(1).
+`IGUAL` es `=`. `AsigOrCall` y `AsigTail` resultan de factorizar por la izquierda el prefijo común `ID` de las acciones. Detalles, FIRST, FOLLOW y tabla LL(1) en `docs/gramatica.md`.
 
 ## 4. Requisitos
 
-- Python 3.10+
-- Sin dependencias externas obligatorias (solo librería estándar)
+- Python 3.10 o superior
+- Sin dependencias externas (solo librería estándar; `pytest` es opcional)
 
 ## 5. Ejecución
 
-### Probar con ejemplos incluidos
 ```bash
-python main.py -f ejemplos/validos_1.sr
+python main.py                              # modo interactivo
+python main.py -f ejemplos/validos_1.sr     # analizar un archivo
+python main.py -f ejemplos/validos_1.sr -t -a   # con tokens (-t) y AST (-a)
+python -m src.utils.first_follow            # FIRST, FOLLOW y tabla LL(1)
+python -m unittest discover -s tests -v     # pruebas (68)
+python -m pytest tests -v                   # alternativa, si tiene pytest
 ```
 
-### Mostrar tokens
-```bash
-python main.py -f ejemplos/validos_1.sr -t
+Formato de los errores:
 ```
-
-### Mostrar AST
-```bash
-python main.py -f ejemplos/validos_1.sr -a
-```
-
-### Reportar todos los errores (modo pánico)
-```bash
-python main.py -f ejemplos/invalidos_1.sr -e
-```
-
-### Modo interactivo
-```bash
-python main.py
-```
-
-### Calcular FIRST, FOLLOW y verificar tabla LL(1)
-```bash
-python -m src.utils.first_follow
-```
-
-### Ejecutar pruebas
-```bash
-python -m unittest discover -s tests -v
+Error léxico (línea 1, columna 8): símbolo no reconocido '#'
+Error sintáctico (token 4, línea 1, columna 20): se esperaba un factor (NUM, ID, TRUE o FALSE), se encontró 'THEN'
 ```
 
 ## 6. Archivos importantes
 
-- `main.py` - Punto de entrada CLI
-- `src/gramatica.py` - Gramática única fuente de verdad
-- `docs/gramatica.md` - Gramática, FIRST, FOLLOW, tabla LL(1), análisis
-- `docs/informe_latex/` - Informe en LaTeX
-- `tests/` - Suite de pruebas
+- `main.py`: punto de entrada
+- `docs/gramatica.md`: gramática, FIRST, FOLLOW, tabla LL(1) y análisis
+- `docs/tabla_casos.md`: casos de prueba documentados
+- `docs/informe_latex/`: informe en LaTeX
+- `tests/`: suite de 68 pruebas (incluye los 25 casos del informe: V1-V10, I1-I10, L1-L5)
 
 ## 7. Autoría y aclaraciones
 
-- El analizador léxico fue tomado como base del cuaderno `analizador_lexico1.ipynb`, adaptado y extendido.
-- Parser implementado desde cero con enfoque LL(1) descendente recursivo (sin generadores automáticos).
-- Árbol sintáctico/AST construido explícitamente.
-- Mensajes de error con formatos exactos: `Error sintáctico (token N, línea L, columna C): ...` y `Error léxico (línea L, columna C): símbolo no reconocido 'S'`.
+- Integrantes: José Sáez (jefe de grupo), Catalina Vergara, Alexa Galeano.
+- El lexer parte del cuaderno `anlizador_lexico1.ipynb` entregado por el docente, adaptado y extendido.
+- El parser está implementado desde cero (sin ANTLR, Yacc, Bison ni PLY), con un solo token de anticipación y sin retroceso.
+- El AST se construye explícitamente.
+- Uso de IA: ver la declaración incluida en el informe.
