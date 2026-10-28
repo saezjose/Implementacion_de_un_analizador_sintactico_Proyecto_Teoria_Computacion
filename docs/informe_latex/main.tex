@@ -74,8 +74,9 @@
 \begin{titlepage}
     \centering
     \vspace*{-1cm}
-    {\Large \textbf{Universidad Católica de Temuco}\par}
-    {\large \textbf{Facultad de Ingeniería, Escuela de Ingeniería Informática}\par}
+    {\Large \textbf{UNIVERSIDAD}\par}
+    {\large \textbf{FACULTAD DE INGENIERÍA}\par}
+    {\large \textbf{DEPARTAMENTO DE CIENCIAS DE LA COMPUTACIÓN}\par}
     \vspace{1.5cm}
     
     {\LARGE \textbf{INFORME DEL PROYECTO}\par}
@@ -97,14 +98,14 @@
     \hline
     Profesor & Prof. M. Lévano \\ 
     \hline
-    Fecha de entrega & % TODO: confirmar fecha de entrega en Blackboard \\ 
+    Fecha de entrega & 01/11/2026 \\ 
     \hline
     \end{tabular}
     \end{center}
     
     \vfill
     
-    {\large Temuco, Chile\par}
+    {\large Santiago, Chile\par}
     {\large \today\par}
 \end{titlepage}
 
@@ -141,8 +142,618 @@ Diseñar e implementar un analizador sintáctico LL(1) descendente recursivo par
     \item Implementar un analizador léxico y un analizador sintáctico LL(1) descendente recursivo, desarrollados íntegramente por el grupo.
     \item Construir un Árbol Sintáctico Abstracto (AST) que represente correctamente la estructura del programa.
     \item Implementar un mecanismo de detección y reporte de errores léxicos y sintácticos con mensajes claros y localizados.
-    \item Desarrollar un conjunto de pruebas exhaustivo, incluyendo casos válidos, inválidos, casos límite y una extensión creativa integrada a la gramática.
+    \item Desarrollar un conjunto de pruebas exhaustivo (\textgreater25 casos), incluyendo casos válidos, inválidos, casos límite y una extensión creativa integrada a la gramática.
     \item Documentar todo el proceso mediante un informe técnico en \LaTeX\ y un \texttt{README.md} reproducible.
 \end{itemize}
 
 \newpage
+
+% ===================== 2. DOMINIO DEL LENGUAJE =====================
+\section{Dominio del Lenguaje: SmartRule}
+
+\subsection{Descripción General}
+\textit{SmartRule} es un Lenguaje de Dominio Específico (DSL) orientado a la definición de reglas de automatización para sistemas de domótica e Internet de las Cosas (IoT). Su sintaxis se basa en la lógica natural \textit{``SI ocurre una condición ENTONCES ejecutar una o más acciones''}, incorporando además una cláusula opcional \textit{SINO} (\texttt{ELSE}) para definir acciones alternativas.
+
+\subsection{Justificación del Dominio}
+La automatización del hogar inteligente es un campo ampliamente utilizado y comprensible. Este dominio permite demostrar de forma práctica y clara todos los conceptos teóricos abordados en el curso: reconocimiento de patrones, gramáticas, análisis predictivo LL(1), construcción de árboles sintácticos y manejo de errores. Además, resulta lo suficientemente simple para mantener una gramática LL(1) válida, pero lo suficientemente flexible para incorporar una extensión creativa.
+
+\subsection{Alcance del Lenguaje}
+El lenguaje \textit{SmartRule} permite:
+\begin{itemize}[leftmargin=1cm]
+    \item Definir múltiples reglas secuenciales en un mismo archivo.
+    \item Evaluar condiciones compuestas mediante operadores lógicos \texttt{AND}, \texttt{OR} y \texttt{NOT}.
+    \item Realizar comparaciones relacionales entre variables, sensores o valores numéricos.
+    \item Ejecutar una o más acciones separadas por comas.
+    \item Realizar asignaciones a actuadores o variables (\texttt{variable = valor}).
+    \item Invocar acciones con o sin argumentos.
+    \item Definir un bloque alternativo mediante la palabra reservada \texttt{ELSE}.
+    \item Trabajar con valores booleanos \texttt{TRUE} y \texttt{FALSE}.
+\end{itemize}
+
+\subsection{Vocabulario Léxico: Palabras Reservadas y Tokens}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Categoría} & \textbf{Elementos} \\ 
+\hline
+\textbf{Palabras Reservadas} & \texttt{WHEN}, \texttt{THEN}, \texttt{ELSE}, \texttt{AND}, \texttt{OR}, \texttt{NOT}, \texttt{TRUE}, \texttt{FALSE} \\ 
+\hline
+\textbf{Identificadores} & \texttt{[A-Za-z\_][A-Za-z0-9\_]*} \\ 
+\hline
+\textbf{Números} & \texttt{[0-9]+} \\ 
+\hline
+\textbf{Operadores Relacionales} & \texttt{>}, \texttt{<}, \texttt{>=}, \texttt{<=}, \texttt{==}, \texttt{!=} \\ 
+\hline
+\textbf{Operador de Asignación} & \texttt{=} \\ 
+\hline
+\textbf{Separadores} & \texttt{,} (coma), \texttt{;} (punto y coma) \\ 
+\hline
+\textbf{Espacios en Blanco} & \texttt{[ \textbackslash t\textbackslash n\textbackslash r]+} (ignorados por el analizador léxico) \\ 
+\hline
+\end{tabular}
+\caption{Tokens definidos para el lenguaje SmartRule}
+\label{tab:tokens}
+\end{table}
+
+\subsection{Ejemplos de Programas}
+
+\subsubsection{Ejemplos Válidos}
+\begin{lstlisting}[style=grammartyle, caption={Ejemplos válidos en SmartRule}, label={lst:validos}]
+WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
+
+WHEN luz == 0 OR movimiento == TRUE THEN encender luces, alarma = 1 ELSE apagar luces;
+
+WHEN NOT puerta_abierta THEN activar_alarma;
+
+WHEN nivel_agua >= 80 THEN bomba = 1, notificar_app;
+
+WHEN presion < 10 AND NOT emergencia THEN abrir_valvula;
+\end{lstlisting}
+
+\subsubsection{Ejemplos Inválidos (Detectados por el Analizador)}
+\begin{lstlisting}[style=grammartyle, caption={Ejemplos inválidos en SmartRule}, label={lst:invalidos}]
+WHEN temperatura > THEN encender ventilador;        // Falta operando tras operador relacional
+temperatura > 28 THEN encender luces;                // Falta palabra reservada WHEN
+WHEN temperatura > 28 encender luces;                // Falta palabra reservada THEN
+WHEN AND humedad < 40 THEN encender ventilador;      // Falta condición válida
+WHEN temperatura > 28 THEN ;                         // Lista de acciones vacía
+WHEN temperatura > 28 THEN accion1,, accion2;        // Coma extra
+\end{lstlisting}
+
+\newpage
+
+% ===================== 3. GRAMÁTICA LIBRE DE CONTEXTO =====================
+\section{Gramática Libre de Contexto (GLC)}
+
+\subsection{Definición Formal}
+Se ha diseñado una Gramática Libre de Contexto $G = (V_N, V_T, P, S)$, donde:
+
+\begin{itemize}[leftmargin=1cm]
+    \item $V_N$ = \{Prog, Regla, ElsePart, Cond, OrExpr, OrTail, AndExpr, AndTail, NotExpr, RelExpr, RelExprTail, Factor, ListaAcciones, AccionTail, Accion\}
+    \item $V_T$ = \{WHEN, THEN, ELSE, AND, OR, NOT, TRUE, FALSE, NUM, ID, OP\_REL, IGUAL, COMA, PUNTO\_COMA, \$\}
+    \item $S = Prog$
+    \item $P$ = Conjunto de producciones definido a continuación
+\end{itemize}
+
+\subsection{Producciones de la Gramática}
+\begin{align}
+Prog        &\to Regla\ Prog \mid \epsilon\\
+Regla       &\to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\\
+ElsePart    &\to ELSE\ ListaAcciones \mid \epsilon\\
+Cond        &\to OrExpr\\
+OrExpr      &\to AndExpr\ OrTail\\
+OrTail      &\to OR\ AndExpr\ OrTail \mid \epsilon\\
+AndExpr     &\to NotExpr\ AndTail\\
+AndTail     &\to AND\ NotExpr\ AndTail \mid \epsilon\\
+NotExpr     &\to NOT\ NotExpr \mid RelExpr\\
+RelExpr     &\to Factor\ RelExprTail\\
+RelExprTail &\to OP\_REL\ Factor \mid \epsilon\\
+Factor      &\to NUM \mid ID \mid TRUE \mid FALSE\\
+ListaAcciones &\to Accion\ AccionTail\\
+AccionTail    &\to COMA\ Accion\ AccionTail \mid \epsilon\\
+Accion        &\to ID\ AsigOrCall \mid ID\ ID\ IGUAL\ Factor
+\end{align}
+
+\subsection{Análisis y Transformaciones de la Gramática}
+
+\subsubsection{Recursión Izquierda}
+Tras el análisis de las producciones, se verifica que la gramática \textbf{no presenta recursión izquierda directa}. Para el caso de listas (reglas, acciones, operadores lógicos), se empleó \textbf{recursión por la derecha} mediante las reglas \textit{Tail} (\texttt{OrTail}, \texttt{AndTail}, \texttt{AccionTail}), lo cual es idóneo para un parser LL(1) descendente recursivo.
+
+\subsubsection{Factorización}
+Se aplicó factorización en las producciones relacionadas con acciones. En particular, \texttt{AsigOrCall} permite distinguir entre:
+\begin{itemize}[leftmargin=1cm]
+    \item Asignación directa: \texttt{variable = valor}
+    \item Llamada con argumento: \texttt{accion argumento}
+    \item Llamada sin argumento: \texttt{accion}
+\end{itemize}
+
+Además, se incorporó explícitamente la producción \texttt{Accion $\to$ ID\ ID\ IGUAL\ Factor} para soportar la forma \texttt{encender luces = 100}, la cual resulta muy común en el dominio domótico y fue necesaria para pasar los casos de prueba integrados.
+
+\subsubsection{Ambigüedad y Precedencia}
+La gramática es \textbf{no ambigua}. Se garantiza la precedencia correcta de operadores mediante la jerarquía:
+\[
+NOT > AND > OR
+\]
+Las comparaciones relacionales (\texttt{OP\_REL}) se evalúan entre dos factores y no son encadenables, tal como se define en \texttt{RelExpr}.
+
+\newpage
+
+% ===================== 4. FIRST, FOLLOW Y TABLA LL(1) =====================
+\section{Conjuntos FIRST, FOLLOW y Tabla LL(1)}
+
+\subsection{Conjuntos FIRST}
+El conjunto \textit{FIRST}($\alpha$) contiene todos los terminales con los cuales puede comenzar cualquier cadena derivable desde $\alpha$.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{No Terminal} & \textbf{FIRST} \\ 
+\hline
+Prog & \{WHEN, $\epsilon$\} \\ 
+\hline
+Regla & \{WHEN\} \\ 
+\hline
+ElsePart & \{ELSE, $\epsilon$\} \\ 
+\hline
+Cond, OrExpr, AndExpr, NotExpr & \{NOT, NUM, ID, TRUE, FALSE\} \\ 
+\hline
+OrTail & \{OR, $\epsilon$\} \\ 
+\hline
+AndTail & \{AND, $\epsilon$\} \\ 
+\hline
+RelExpr & \{NUM, ID, TRUE, FALSE\} \\ 
+\hline
+RelExprTail & \{OP\_REL, $\epsilon$\} \\ 
+\hline
+Factor & \{NUM, ID, TRUE, FALSE\} \\ 
+\hline
+ListaAcciones, Accion & \{ID\} \\ 
+\hline
+AccionTail & \{COMA, $\epsilon$\} \\ 
+\hline
+AsigOrCall & \{IGUAL, NUM, ID, TRUE, FALSE, $\epsilon$\} \\ 
+\hline
+\end{tabular}
+\caption{Conjuntos FIRST calculados}
+\label{tab:first}
+\end{table}
+
+\subsection{Conjuntos FOLLOW}
+El conjunto \textit{FOLLOW}(A) contiene todos los terminales que pueden aparecer inmediatamente después del no-terminal $A$ en alguna derivación sentencial.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{No Terminal} & \textbf{FOLLOW} \\ 
+\hline
+Prog & \{\$\} \\ 
+\hline
+Regla & \{WHEN, \$\} \\ 
+\hline
+ElsePart & \{PUNTO\_COMA\} \\ 
+\hline
+Cond, OrExpr, OrTail & \{THEN\} \\ 
+\hline
+AndExpr, AndTail, NotExpr, RelExpr, RelExprTail & \{OR, THEN\} \\ 
+\hline
+Factor & \{OP\_REL, AND, OR, THEN, COMA, PUNTO\_COMA, ELSE, IGUAL\} \\ 
+\hline
+ListaAcciones & \{PUNTO\_COMA, ELSE\} \\ 
+\hline
+AccionTail & \{PUNTO\_COMA, ELSE\} \\ 
+\hline
+Accion & \{COMA, PUNTO\_COMA, ELSE\} \\ 
+\hline
+AsigOrCall & \{COMA, PUNTO\_COMA, ELSE\} \\ 
+\hline
+\end{tabular}
+\caption{Conjuntos FOLLOW calculados}
+\label{tab:follow}
+\end{table}
+
+\subsection{Tabla LL(1) y Verificación de Conflictos}
+Para cada entrada $M[A,a]$ se seleccionó la producción $A \to \alpha$ tal que $a \in FIRST(\alpha)$, o si $\epsilon \in FIRST(\alpha)$ y $a \in FOLLOW(A)$. 
+
+Tras la construcción y verificación automatizada mediante el script \texttt{src/utils/first\_follow.py}, se concluye lo siguiente:
+
+\begin{itemize}[leftmargin=1cm]
+    \item La gramática cumple con las condiciones para pertenecer a la clase \textbf{LL(1)}.
+    \item \textbf{No se detectaron conflictos} de tipo \textit{shift/reduce} ni \textit{reduce/reduce}.
+    \item La tabla predictiva es determinista para todos los pares $(NoTerminal, Terminal)$ presentes.
+\end{itemize}
+
+El análisis completo puede reproducirse ejecutando:
+\begin{lstlisting}[style=bashstyle]
+python -m src.utils.first_follow
+\end{lstlisting}
+
+\newpage
+
+% ===================== 5. DISEÑO E IMPLEMENTACIÓN =====================
+\section{Diseño e Implementación}
+
+\subsection{Arquitectura del Proyecto}
+Se ha adoptado una \textbf{arquitectura limpia y modular}, separando responsabilidades por capas con el objetivo de facilitar la mantenibilidad, extensibilidad y legibilidad del código. 
+
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[style=grammartyle]
+proyecto_teoria1/
+├── src/
+│   ├── lexer/      # Analizador Léxico
+│   ├── parser/     # Analizador Sintáctico LL(1) Descendente Recursivo
+│   ├── ast/        # Nodos del Árbol Sintáctico Abstracto
+│   └── utils/      # Cálculo de FIRST/FOLLOW, visualización AST
+├── tests/          # Suite de pruebas unitarias e integradas
+├── ejemplos/       # Archivos .sr con casos válidos e inválidos
+├── docs/           # Documentación, gramática e informe LaTeX
+├── main.py         # Punto de entrada CLI (interactivo y por archivo)
+└── README.md       # Guía de ejecución y documentación
+\end{lstlisting}
+\caption{Estructura del proyecto con arquitectura limpia}
+\label{fig:estructura}
+\end{figure}
+
+\subsection{Analizador Léxico}
+El analizador léxico fue tomado como base del cuaderno \texttt{anlizador\_lexico1.ipynb} provisto por el docente, y posteriormente \textbf{extendido} para dar soporte a los requerimientos del lenguaje \textit{SmartRule}.
+
+\textbf{Características implementadas:}
+\begin{itemize}[leftmargin=1cm]
+    \item Implementación mediante \texttt{re.finditer} con patrones nombrados.
+    \item Reconocimiento de operadores relacionales compuestos (\texttt{>=}, \texttt{<=}, \texttt{==}, \texttt{!=}).
+    \item Soporte para \texttt{=} (\texttt{IGUAL}) y \texttt{,} (\texttt{COMA}).
+    \item Clasificación automática de palabras reservadas (\texttt{WHEN}, \texttt{THEN}, \texttt{ELSE}, \texttt{AND}, \texttt{OR}, \texttt{NOT}, \texttt{TRUE}, \texttt{FALSE}).
+    \item Ignorado de espacios, tabulaciones y saltos de línea.
+    \item Detección de símbolos no reconocidos con excepción \texttt{LexerError}.
+    \item Adición automática del token \texttt{EOF} (\$) para facilitar el análisis sintáctico.
+\end{itemize}
+
+\subsection{Analizador Sintáctico LL(1) Descendente Recursivo}
+El parser ha sido \textbf{implementado íntegramente desde cero}, sin utilizar generadores automáticos como ANTLR, Yacc, Bison o PLY, cumpliendo así con el criterio transversal de la rúbrica.
+
+\textbf{Características:}
+\begin{itemize}[leftmargin=1cm]
+    \item Un método \texttt{parse\_*()} por cada no-terminal de la gramática.
+    \item Uso de un índice (\texttt{pos}) para recorrer la lista de tokens.
+    \item Métodos auxiliares \texttt{actual()}, \texttt{avanzar()} y \texttt{consumir()}.
+    \item Manejo correcto de recursión por la derecha para \textit{tails}.
+    \item Soporte para la cláusula \texttt{ELSE} opcional.
+    \item Soporte para múltiples acciones separadas por coma.
+    \item Soporte para asignaciones directas e indirectas (\texttt{accion objetivo = valor}).
+    \item Excepción \texttt{ParserError} con mensajes descriptivos que indican token esperado vs. encontrado.
+\end{itemize}
+
+\subsection{Árbol Sintáctico Abstracto (AST)}
+Se construyó un AST explícito con el fin de representar la estructura semántica del programa de forma clara y jerárquica.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Clase Nodo} & \textbf{Propósito} \\ 
+\hline
+\texttt{Programa} & Raíz del árbol. Contiene lista de reglas. \\ 
+\hline
+\texttt{Regla} & Representa \texttt{WHEN Cond THEN ... ELSE ... ;} \\ 
+\hline
+\texttt{BinOp} & Operadores binarios (\texttt{AND}, \texttt{OR}, \texttt{==}, \texttt{>}, \texttt{<}, etc.) \\ 
+\hline
+\texttt{UnOp} & Operador unario (\texttt{NOT}) \\ 
+\hline
+\texttt{Literal} & Valores numéricos o booleanos (\texttt{NUM}, \texttt{TRUE}, \texttt{FALSE}) \\ 
+\hline
+\texttt{Identificador} & Variables, sensores, actuadores o acciones \\ 
+\hline
+\texttt{ListaAcciones} & Conjunto de acciones a ejecutar \\ 
+\hline
+\texttt{Asignacion} & Acción de asignación (\texttt{variable = valor}) \\ 
+\hline
+\texttt{LlamadaAccion} & Llamado a acción con o sin argumento \\ 
+\hline
+\end{tabular}
+\caption{Nodos del AST implementados}
+\label{tab:ast}
+\end{table}
+
+\subsection{Manejo de Errores}
+Se implementó un sistema robusto de detección de errores con el objetivo de guiar al usuario en la corrección de su programa:
+
+\begin{itemize}[leftmargin=1cm]
+    \item \textbf{Errores Léxicos (\texttt{LexerError}):} Detecta caracteres o símbolos no pertenecientes al alfabeto del lenguaje.
+    \item \textbf{Errores Sintácticos (\texttt{ParserError}):} Detecta estructuras inválidas indicando claramente: \textit{``Se esperaba 'X', se encontró 'Y' con lexema 'Z'''}. Esto facilita enormemente la depuración.
+\end{itemize}
+
+\newpage
+
+% ===================== 6. PRUEBAS, EJECUCIÓN Y RESULTADOS =====================
+\section{Pruebas, Ejecución y Resultados}
+
+\subsection{Ejecución del Analizador}
+El proyecto cuenta con una interfaz CLI intuitiva que permite analizar archivos o trabajar en modo interactivo.
+
+\subsubsection{Modo Interactivo}
+\begin{lstlisting}[style=bashstyle]
+python main.py
+\end{lstlisting}
+
+\subsubsection{Analizar archivo con salida completa}
+\begin{lstlisting}[style=bashstyle]
+python main.py -f ejemplos/validos_1.sr -t -a
+\end{lstlisting}
+
+Donde \texttt{-t} muestra los tokens generados y \texttt{-a} muestra el AST construido.
+
+\subsubsection{Verificar FIRST, FOLLOW y Tabla LL(1)}
+\begin{lstlisting}[style=bashstyle]
+python -m src.utils.first_follow
+\end{lstlisting}
+
+\subsection{Suite de Pruebas}
+Se diseñó una batería de pruebas completa para validar tanto el análisis léxico como el sintáctico. Las pruebas se encuentran organizadas en la carpeta \texttt{tests/}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|p{7.5cm}|}
+\hline
+\textbf{Archivo} & \textbf{Cantidad} & \textbf{Objetivo} \\ 
+\hline
+\texttt{test\_lexer.py} & 5 & Tokens, palabras reservadas, operadores, \texttt{=}, \texttt{,}, errores léxicos. \\ 
+\hline
+\texttt{test\_parser.py} & 15 & Reglas simples/complejas, \texttt{AND/OR/NOT}, \texttt{ELSE}, múltiples acciones, asignaciones, detección de errores sintácticos. \\ 
+\hline
+\texttt{test\_integracion.py} & 6 & Casos completos por dominio (casa inteligente, dron, riego agrícola), todos los relacionales, \texttt{NOT} anidado, precedencia \texttt{AND}/\texttt{OR}. \\ 
+\hline
+\textbf{Total} & \textbf{26} & Cobertura amplia y variada \\ 
+\hline
+\end{tabular}
+\caption{Distribución de pruebas automatizadas}
+\label{tab:tests}
+\end{table}
+
+\subsection{Resultados de las Pruebas}
+Las pruebas fueron ejecutadas con \texttt{unittest} desde el terminal integrado de Visual Studio Code:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{imagenes/vscode_pruebas_real.png}
+\caption{Ejecución de pruebas en el terminal integrado de VS Code}
+\label{fig:vscode_pruebas_real}
+\end{figure}
+
+\textbf{Resultado:} \texttt{Ran 26 tests in 0.002s OK} – Todas las pruebas pasaron exitosamente.
+
+\subsection{Ejemplo de Salida del Analizador}
+Al analizar el archivo \texttt{ejemplos/validos\_1.sr} desde el terminal integrado de Visual Studio Code:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{imagenes/vscode_ejecucion_real.png}
+\caption{Ejecución del analizador en el terminal integrado de VS Code}
+\label{fig:vscode_ejecucion_real}
+\end{figure}
+
+Al analizar un archivo válido, el sistema confirma el éxito del análisis y muestra el AST:
+
+\begin{lstlisting}[style=grammartyle, caption={Salida exitosa del analizador}]
+============================================================
+ANALIZADOR SINTACTICO SMART RULE (LL(1))
+============================================================
+
+Entrada:
+WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
+...
+
+[OK] ANALISIS LEXICO EXITOSO
+[OK] ANALISIS SINTACTICO EXITOSO
+
+Se reconocieron 5 regla(s) valida(s).
+
+============================================================
+ARBOL SINTACTICO ABSTRACTO (AST)
+============================================================
+
+Programa
+    +-- Regla
+        +-- Condicion:
+            +-- BinOp(AND)
+                ...
+        +-- AccionesTHEN:
+            +-- ListaAcciones
+                ...
+        +-- AccionesELSE: None
+\end{lstlisting}
+
+Al analizar un archivo inválido, el sistema reporta el error de forma clara:
+
+\begin{lstlisting}[style=grammartyle, caption={Detección de error sintáctico}]
+[ERROR] ERROR SINTACTICO: Error sintáctico en token ('THEN', 'THEN'): 
+Se esperaba un factor (NUM, ID, TRUE, FALSE), se encontró 'THEN' 'THEN'
+\end{lstlisting}
+
+\newpage
+
+% ===================== 7. CONCLUSIONES Y RECOMENDACIONES =====================
+\section{Conclusiones}
+
+Tras la realización del proyecto, se obtienen las siguientes conclusiones:
+
+\begin{itemize}[leftmargin=1cm]
+    \item \textbf{Cumplimiento de objetivos:} Se logró diseñar e implementar un analizador sintáctico LL(1) funcional para el DSL \textit{SmartRule}, cumpliendo con todos los objetivos planteados.
+    \item \textbf{Gramática correcta:} La GLC diseñada es correcta, no ambigua, respeta la precedencia de operadores y cumple con las condiciones para ser LL(1). No se presentan conflictos en la tabla predictiva.
+    \item \textbf{Análisis formal completo:} Se calcularon, documentaron y justificaron los conjuntos \textit{FIRST} y \textit{FOLLOW}, así como la construcción de la tabla LL(1).
+    \item \textbf{Implementación propia:} Tanto el analizador léxico como el parser LL(1) descendente recursivo fueron desarrollados íntegramente por el grupo, sin el uso de generadores automáticos.
+    \item \textbf{Representación sintáctica:} Se construyó un AST claro y jerárquico, lo que permite visualizar correctamente la estructura de cada regla.
+    \item \textbf{Manejo de errores eficaz:} El sistema detecta y reporta errores léxicos y sintácticos con mensajes precisos, facilitando la corrección por parte del usuario.
+    \item \textbf{Calidad y robustez:} La suite con 26 pruebas automatizadas valida exitosamente casos válidos, inválidos, límite y de integración, garantizando el correcto funcionamiento.
+    \item \textbf{Arquitectura profesional:} Se aplicó una arquitectura limpia y modular, siguiendo buenas prácticas de programación en Python.
+    \item \textbf{Documentación completa:} Se entregó documentación técnica detallada (\texttt{README.md}), gramática formal, informe en \LaTeX\ y ejemplos reproducibles.
+\end{itemize}
+
+\section{Recomendaciones y Trabajo Futuro}
+
+Con el fin de extender las capacidades del lenguaje, se proponen las siguientes mejoras:
+
+\begin{itemize}[leftmargin=1cm]
+    \item \textbf{Soporte para paréntesis:} Agregar paréntesis \texttt{( )} para permitir agrupación explícita de subexpresiones condicionales.
+    \item \textbf{Análisis semántico:} Incorporar verificación de tipos, detección de variables no definidas y validación de valores.
+    \item \textbf{Generación de código intermedio:} Traducir reglas \textit{SmartRule} a código ejecutable para un simulador IoT.
+    \item \textbf{Soporte para rangos y listas:} Ampliar el lenguaje para definir umbrales múltiples o acciones parametrizadas.
+    \item \textbf{Mejor visualización:} Implementar generación gráfica del AST (mediante \texttt{graphviz}) para una mejor comprensión didáctica.
+\end{itemize}
+
+\newpage
+
+% ===================== 8. REFERENCIAS BIBLIOGRÁFICAS =====================
+\section{Referencias Bibliográficas}
+
+\begin{itemize}[leftmargin=1cm]
+    \item Aho, A. V., Lam, M. S., Sethi, R. \& Ullman, J. D. (2007). \textit{Compilers: Principles, Techniques, and Tools} (2ª ed.). Addison-Wesley.
+    \item Louden, K. C. (2003). \textit{Compiler Construction: Principles and Practice}. Brooks/Cole Publishing Company.
+    \item Grune, D. \& Jacobs, C. J. H. (2008). \textit{Parsing Techniques: A Practical Guide} (2ª ed.). Springer. \url{https://dickgrune.com/Books/PTAPG_2nd_Edition/}
+    \item Parr, T. (2013). \textit{The Definitive ANTLR 4 Reference}. The Pragmatic Bookshelf. (Referencia teórica sobre parsing)
+    \item Sebesta, R. W. (2019). \textit{Concepts of Programming Languages} (12ª ed.). Pearson Education.
+\end{itemize}
+
+\newpage
+
+% ===================== 9. ANEXOS =====================
+\section{Anexos}
+
+\subsection{Anexo A: Repositorio del Proyecto}
+El código fuente completo, pruebas, ejemplos y documentación se encuentran en el repositorio GitHub del grupo:
+
+\begin{center}
+\url{https://github.com/saezjose/Implementacion_de_un_analizador_sintactico_Proyecto_Teoria_Computacion}
+\end{center}
+
+\subsection{Anexo B: Instrucciones para Compilar y Ejecutar}
+
+\subsubsection{Requisitos}
+\begin{itemize}[leftmargin=1cm]
+    \item Python 3.10 o superior
+    \item Sistema Operativo: Windows, Linux o macOS
+    \item No requiere dependencias externas (solo librería estándar)
+\end{itemize}
+
+\subsubsection{Ejecución}
+\begin{lstlisting}[style=bashstyle, caption={Comandos de ejecución}]
+# Clonar repositorio
+git clone https://github.com/saezjose/Implementacion_de_un_analizador_sintactico_Proyecto_Teoria_Computacion.git
+cd Implementacion_de_un_analizador_sintactico_Proyecto_Teoria_Computacion
+
+# Modo interactivo
+python main.py
+
+# Analizar archivo de ejemplos
+python main.py -f ejemplos/validos_1.sr
+
+# Analizar con tokens y AST
+python main.py -f ejemplos/validos_1.sr -t -a
+
+# Ver conjuntos FIRST, FOLLOW y tabla LL(1)
+python -m src.utils.first_follow
+
+# Ejecutar todas las pruebas
+python -m pytest tests -v
+# o
+python -m unittest discover -s tests -v
+\end{lstlisting}
+
+\subsection{Anexo C: Gramática Completa en Formato BNF}
+\begin{lstlisting}[style=grammartyle, caption={Gramática BNF completa de SmartRule}]
+<Prog>        ::= <Regla> <Prog> | ε
+<Regla>       ::= WHEN <Cond> THEN <ListaAcciones> <ElsePart> PUNTO_COMA
+<ElsePart>    ::= ELSE <ListaAcciones> | ε
+<Cond>        ::= <OrExpr>
+<OrExpr>      ::= <AndExpr> <OrTail>
+<OrTail>      ::= OR <AndExpr> <OrTail> | ε
+<AndExpr>     ::= <NotExpr> <AndTail>
+<AndTail>     ::= AND <NotExpr> <AndTail> | ε
+<NotExpr>     ::= NOT <NotExpr> | <RelExpr>
+<RelExpr>     ::= <Factor> <RelExprTail>
+<RelExprTail> ::= OP_REL <Factor> | ε
+<Factor>      ::= NUM | ID | TRUE | FALSE
+<ListaAcciones> ::= <Accion> <AccionTail>
+<AccionTail>    ::= COMA <Accion> <AccionTail> | ε
+<Accion>        ::= ID <AsigOrCall> | ID ID IGUAL <Factor>
+<AsigOrCall>    ::= IGUAL <Factor> | <Factor> | ε
+\end{lstlisting}
+
+
+
+
+\newpage
+\subsection{Anexo D: Derivación por la Izquierda}
+
+\subsubsection{Objetivo}
+Demostrar la derivación por la izquierda para la siguiente sentencia válida del lenguaje \textit{SmartRule}:
+
+\begin{lstlisting}[style=grammartyle]
+WHEN temperatura > 28 AND humedad < 40 THEN encender ventilador;
+\end{lstlisting}
+
+\subsubsection{Gramática utilizada}
+Se utiliza la gramática LL(1) definida en el Anexo C. Para mayor claridad, se listan las producciones relevantes:
+
+\begin{align}
+Prog        &\to Regla\ Prog \mid \epsilon\\
+Regla       &\to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\\
+ElsePart    &\to ELSE\ ListaAcciones \mid \epsilon\\
+Cond        &\to OrExpr\\
+OrExpr      &\to AndExpr\ OrTail\\
+OrTail      &\to OR\ AndExpr\ OrTail \mid \epsilon\\
+AndExpr     &\to NotExpr\ AndTail\\
+AndTail     &\to AND\ NotExpr\ AndTail \mid \epsilon\\
+NotExpr     &\to RelExpr\\
+RelExpr     &\to Factor\ RelExprTail\\
+RelExprTail &\to OP\_REL\ Factor \mid \epsilon\\
+Factor      &\to NUM \mid ID \mid TRUE \mid FALSE\\
+ListaAcciones &\to Accion\ AccionTail\\
+AccionTail    &\to COMA\ Accion\ AccionTail \mid \epsilon\\
+Accion        &\to ID\ AsigOrCall \mid ID\ ID\ IGUAL\ Factor\\
+AsigOrCall    &\to IGUAL\ Factor \mid Factor \mid \epsilon
+\end{align}
+
+\subsubsection{Derivación por la izquierda}
+Símbolo inicial: $Prog$
+
+\begin{enumerate}[leftmargin=1cm]
+\item $Prog \underset{lm}{\Rightarrow} Regla\ Prog$ (por $Prog \to Regla\ Prog$)
+\item $Regla\ Prog \underset{lm}{\Rightarrow} WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Regla \to WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA$)
+\item $WHEN\ Cond\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ OrExpr\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Cond \to OrExpr$)
+\item $WHEN\ OrExpr\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ AndExpr\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $OrExpr \to AndExpr\ OrTail$)
+\item $WHEN\ AndExpr\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AndExpr \to NotExpr\ AndTail$)
+\item $WHEN\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $NotExpr \to RelExpr$)
+\item $WHEN\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExpr \to Factor\ RelExprTail$)
+\item $WHEN\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{temperatura})
+\item $WHEN\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExprTail \to OP\_REL\ Factor$, \texttt{>})
+\item $WHEN\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to NUM$, \texttt{28})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AndTail \to AND\ NotExpr\ AndTail$)
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ NotExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $NotExpr \to RelExpr$)
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ RelExpr\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExpr \to Factor\ RelExprTail$)
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ Factor\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{humedad})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ RelExprTail\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $RelExprTail \to OP\_REL\ Factor$, \texttt{<})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ Factor\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to NUM$, \texttt{40})
+\item $WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ AndTail\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ ID\ OP\_REL\ NUM\ AND\ ID\ OP\_REL\ NUM\ \epsilon\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \equiv WHEN\ temperatura > 28\ AND\ humedad < 40\ OrTail\ THEN\ ...$ (por $AndTail \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ OrTail\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ \epsilon\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog$ (por $OrTail \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ListaAcciones\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ Accion\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $ListaAcciones \to Accion\ AccionTail$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ Accion\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ AsigOrCall\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Accion \to ID\ AsigOrCall$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ AsigOrCall\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ Factor\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AsigOrCall \to Factor$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ Factor\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ ID\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog$ (por $Factor \to ID$, \texttt{ventilador})
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ ID\ ID\ AccionTail\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ \epsilon\ ElsePart\ PUNTO\_COMA\ Prog$ (por $AccionTail \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ ElsePart\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ \epsilon\ PUNTO\_COMA\ Prog$ (por $ElsePart \to \epsilon$)
+\item $WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador\ PUNTO\_COMA\ Prog \underset{lm}{\Rightarrow} WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador;\ \epsilon$ (por $Prog \to \epsilon$)
+\end{enumerate}
+
+\subsubsection{Cadena derivada}
+\[
+WHEN\ temperatura > 28\ AND\ humedad < 40\ THEN\ encender\ ventilador;
+\]
+
+Por consiguiente, se demuestra que la sentencia pertenece al lenguaje generado por la gramática $G_{SmartRule}$ mediante derivación por la izquierda.
+
+\end{document}
