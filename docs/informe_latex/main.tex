@@ -132,17 +132,20 @@
 
 % ===================== 1. INTRODUCCIÓN =====================
 \section{Introducción}
+Detrás de todo compilador hay un análisis sintáctico que revisa que el código respete una estructura definida, y en Teoría de la Computación vimos que esa estructura se describe con gramáticas libres de contexto. Este proyecto fue la oportunidad de llevarlo a la práctica.
+
+Creamos SmartRule, un lenguaje para escribir reglas de automatización del hogar inteligente, con una lógica simple de ``cuando pase esto, entonces haz esto otro'', más un ``si no'' opcional. Para este lenguaje diseñamos e implementamos un analizador sintáctico LL(1) descendente recursivo, con su gramática, conjuntos FIRST y FOLLOW, tabla predictiva, árbol sintáctico abstracto (AST) y mensajes de error claros, todo validado con 68 pruebas automatizadas.
 
 \subsection{Antecedentes}
-La teoría de autómatas y los lenguajes formales constituyen la base fundamental para el diseño y construcción de compiladores e intérpretes. Dentro de este proceso, el análisis sintáctico (también conocido como \textit{parsing}) tiene como finalidad verificar que una secuencia de tokens generada por el analizador léxico, cumpla con la estructura gramatical definida para un lenguaje determinado. 
+Todo compilador o intérprete se apoya en la teoría de autómatas y los lenguajes formales~\cite{brena}. Dentro de ese proceso, el análisis sintáctico (o \textit{parsing}) cumple un rol clave: revisar que la secuencia de tokens que entrega el analizador léxico respete la estructura gramatical del lenguaje.
 
-Para lograrlo, se utilizan Gramáticas Libres de Contexto (GLC), las cuales permiten describir de manera formal la sintaxis de lenguajes de programación, así como Lenguajes de Dominio Específico (\textit{Domain Specific Languages - DSL}).
+Para describir esa estructura de manera formal se usan las Gramáticas Libres de Contexto (GLC), que sirven tanto para los lenguajes de programación como para los Lenguajes de Dominio Específico (\textit{Domain Specific Languages - DSL}), que están pensados para resolver problemas de un área en particular.
 
 \subsection{Planteamiento del Problema}
-Se requiere diseñar e implementar un analizador sintáctico capaz de reconocer, validar y representar sintácticamente programas escritos en un Lenguaje de Dominio Específico creado por el grupo. Además, debe ser capaz de detectar errores sintácticos, entregar mensajes claros y construir una representación estructurada de la entrada mediante un Árbol Sintáctico Abstracto (AST).
+Necesitábamos construir un analizador sintáctico para un lenguaje de dominio específico creado por nosotros. Este debía reconocer y validar los programas escritos en ese lenguaje, avisar cuando hubiera errores sintácticos con mensajes fáciles de entender, y representar la estructura de lo que se analiza mediante un Árbol Sintáctico Abstracto (AST).
 
 \subsection{Objetivo General}
-Diseñar e implementar un analizador sintáctico LL(1) descendente recursivo para el lenguaje de dominio específico \textit{SmartRule}, aplicando Gramáticas Libres de Contexto, conjuntos \textit{FIRST} y \textit{FOLLOW}, análisis LL(1), construcción del Árbol Sintáctico Abstracto (AST) y detección de errores sintácticos.
+Diseñar e implementar un analizador sintáctico LL(1) descendente recursivo para el lenguaje de dominio específico \textit{SmartRule}. Para lograrlo, aplicamos Gramáticas Libres de Contexto, conjuntos \textit{FIRST} y \textit{FOLLOW} y análisis LL(1), además de construir el Árbol Sintáctico Abstracto (AST) y detectar los errores sintácticos del programa.
 
 \subsection{Objetivos Específicos}
 \begin{itemize}[leftmargin=1cm]
@@ -164,10 +167,10 @@ Diseñar e implementar un analizador sintáctico LL(1) descendente recursivo par
 \section{Dominio del Lenguaje: SmartRule}
 
 \subsection{Descripción General}
-\textit{SmartRule} es un Lenguaje de Dominio Específico (DSL) orientado a la definición de reglas de automatización para sistemas de domótica e Internet de las Cosas (IoT). Su sintaxis se basa en la lógica natural \textit{``SI ocurre una condición ENTONCES ejecutar una o más acciones''}, incorporando además una cláusula opcional \textit{SINO} (\texttt{ELSE}) para definir acciones alternativas.
+\textit{SmartRule} es un Lenguaje de Dominio Específico (DSL) pensado para escribir reglas de automatización en sistemas de domótica e Internet de las Cosas (IoT). Su sintaxis sigue la lógica de la lengua natural: \textit{``SI ocurre una condición, ENTONCES ejecutar una o más acciones''}. Además, incluye una cláusula opcional \textit{SINO} (\texttt{ELSE}) para indicar qué hacer cuando la condición no se cumple.
 
 \subsection{Justificación del Dominio}
-La automatización del hogar inteligente es un campo ampliamente utilizado y comprensible. Este dominio permite demostrar de forma práctica y clara todos los conceptos teóricos abordados en el curso: reconocimiento de patrones, gramáticas, análisis predictivo LL(1), construcción de árboles sintácticos y manejo de errores. Además, resulta lo suficientemente simple para mantener una gramática LL(1) válida, pero lo suficientemente flexible para incorporar una extensión creativa.
+Elegimos el hogar inteligente porque es un tema conocido y fácil de entender. Con este dominio pudimos mostrar de forma clara los conceptos vistos en el curso: reconocimiento de patrones, gramáticas, análisis predictivo LL(1), árboles sintácticos y manejo de errores. Además, es lo bastante simple como para mantener una gramática LL(1) válida, pero con la flexibilidad suficiente para agregar una extensión creativa.
 
 \subsection{Alcance del Lenguaje}
 El lenguaje \textit{SmartRule} permite:
@@ -250,12 +253,10 @@ WHEN temperatura > 28 THEN accion1,, accion2;        // Coma extra
 
 
 \subsection{Extensión Creativa}
-Sobre los requisitos mínimos del enunciado se incorporó como extensión creativa un conjunto de construcciones propias del dominio domótico, todas integradas en la gramática (no son decorativas):
-\begin{itemize}[leftmargin=1cm]
-    \item \textbf{Negación} \texttt{NOT}: operador unario prefijo y anidable, de mayor precedencia que \texttt{AND} y \texttt{OR}.
-    \item \textbf{Cláusula alternativa} \texttt{ELSE}: define las acciones que se ejecutan cuando la condición no se cumple.
-    \item \textbf{Múltiples acciones} separadas por coma, con acciones sin argumento, con argumento (\texttt{encender luces}) y con asignación (\texttt{bomba = 1}, \texttt{encender riego = 100}).
-\end{itemize}
+En lugar de añadir elementos estéticos solo para cumplir con el requisito, decidimos implementar funcionalidades que realmente aportaran a la lógica de un sistema domótico y que se integraran de forma natural en la gramática. 
+
+Por esto, incorporamos el operador \texttt{NOT} para negar variables (asignándole la mayor precedencia), añadimos el bloque \texttt{ELSE} para manejar el flujo alternativo cuando una condición no se cumple, y permitimos la ejecución de múltiples acciones simultáneas separadas por comas.
+
 La Tabla~\ref{tab:ext} indica dónde se refleja cada construcción: producciones y celdas de la tabla LL(1) (Sección~\ref{sec:first}) y casos de prueba (Sección~\ref{sec:casos}).
 
 {\footnotesize
@@ -311,7 +312,7 @@ Las producciones se muestran agrupadas por no terminal; en la Tabla~\ref{tab:sel
 \subsection{Análisis y Transformaciones de la Gramática}
 
 \subsubsection{Recursión Izquierda}
-Tras el análisis de las producciones, se verifica que la gramática \textbf{no presenta recursión izquierda}, ni directa ni indirecta (comprobado construyendo el grafo de primeros símbolos de cada no terminal y verificando que no tiene ciclos). Para el caso de listas (reglas, acciones, operadores lógicos), se empleó \textbf{recursión por la derecha} mediante las reglas \textit{Tail} (\texttt{OrTail}, \texttt{AndTail}, \texttt{AccionTail}), lo cual es idóneo para un parser LL(1) descendente recursivo.
+Tras el análisis de las producciones, verificamos que la gramática \textbf{no presenta recursión izquierda}, ni directa ni indirecta (comprobado construyendo el grafo de primeros símbolos de cada no terminal y verificando que no tiene ciclos). Para el caso de listas (reglas, acciones, operadores lógicos), se empleó \textbf{recursión por la derecha} mediante las reglas \textit{Tail} (\texttt{OrTail}, \texttt{AndTail}, \texttt{AccionTail}), lo cual es idóneo para un parser LL(1) descendente recursivo.
 
 \subsubsection{Factorización por la Izquierda}
 Durante el análisis se detectó un \textbf{conflicto FIRST/FIRST} en la producción de acciones. La versión inicial de la gramática era:
@@ -321,7 +322,7 @@ Durante el análisis se detectó un \textbf{conflicto FIRST/FIRST} en la producc
 \end{align*}
 Las dos alternativas de \textit{Accion} comienzan con \texttt{ID}, por lo que con un solo token de anticipación el parser no puede elegir entre ellas. Además, \textit{AsigOrCall $\to$ Factor} también puede derivar \texttt{ID}, de modo que una entrada como \texttt{encender luces} admitía más de una derivación. Por lo tanto esa versión \textbf{no era LL(1)}.
 
-Se resolvió factorizando por la izquierda el prefijo común \texttt{ID} y extrayendo la parte opcional de la asignación en un nuevo no terminal, \textit{AsigTail}:
+Se resolvió \textbf{factorizando por la izquierda} el prefijo común \texttt{ID} y extrayendo la parte opcional de la asignación en un nuevo no terminal, \textit{AsigTail}:
 \begin{align*}
 \mathit{Accion} &\to \mathtt{ID}\ \mathit{AsigOrCall}\\
 \mathit{AsigOrCall} &\to \mathtt{IGUAL}\ \mathit{Factor} \mid \mathtt{ID}\ \mathit{AsigTail} \mid \mathtt{NUM} \mid \mathtt{TRUE} \mid \mathtt{FALSE} \mid \epsilon\\
@@ -415,7 +416,7 @@ AsigTail & \{ELSE, COMA, PUNTO\_COMA\}\\ \hline
 
 \subsection{Tabla LL(1) y Verificación de Conflictos}
 \label{sec:ll1}
-Para cada producción $A \to \alpha$ se define su \textit{conjunto de selección}: $FIRST(\alpha) \setminus \{\epsilon\}$, más $FOLLOW(A)$ cuando $\epsilon \in FIRST(\alpha)$. La entrada $M[A,a]$ contiene la producción cuyo conjunto de selección incluye al terminal $a$. La Tabla~\ref{tab:select} numera las producciones y entrega sus conjuntos de selección, y la Tabla~\ref{tab:ll1} muestra la tabla predictiva resultante.
+Para cada producción $A \to \alpha$ se define su \textit{conjunto de selección}: $FIRST(\alpha) \setminus \{\epsilon\}$, más $FOLLOW(A)$ cuando $\epsilon \in FIRST(\alpha)$. La entrada $M[A,a]$ contiene la producción cuyo conjunto de selección incluye al terminal  $a$~\cite[Cap.~5, \S5.2.1--5.2.4, pp.~117--122]{navarrete}. La Tabla~\ref{tab:select} numera las producciones y entrega sus conjuntos de selección, y la Tabla~\ref{tab:ll1} muestra la tabla predictiva resultante.
 
 {\small
 \begin{longtable}{|c|>{\raggedright\arraybackslash}p{7.2cm}|>{\raggedright\arraybackslash}p{5.2cm}|}
@@ -537,7 +538,8 @@ El analizador léxico fue tomado como base del cuaderno \texttt{anlizador\_lexic
 
 \textbf{Características implementadas:}
 \begin{itemize}[leftmargin=1cm]
-    \item Implementación mediante \texttt{re.finditer} con patrones nombrados.
+    \item Implementación mediante \texttt{re.finditer} con patrones nombrados~\cite[sección \textit{Writing a Tokenizer}]{pythonre}.
+   
     \item Reconocimiento de operadores relacionales compuestos (\texttt{>=}, \texttt{<=}, \texttt{==}, \texttt{!=}).
     \item Soporte para \texttt{=} (\texttt{IGUAL}) y \texttt{,} (\texttt{COMA}).
     \item Clasificación automática de palabras reservadas (\texttt{WHEN}, \texttt{THEN}, \texttt{ELSE}, \texttt{AND}, \texttt{OR}, \texttt{NOT}, \texttt{TRUE}, \texttt{FALSE}).
@@ -546,20 +548,13 @@ El analizador léxico fue tomado como base del cuaderno \texttt{anlizador\_lexic
     \item Adición automática del token \texttt{EOF} (\$) para facilitar el análisis sintáctico.
 \end{itemize}
 
-\subsection{Analizador Sintáctico LL(1) Descendente Recursivo}
-El parser ha sido \textbf{implementado íntegramente desde cero}, sin utilizar generadores automáticos como ANTLR, Yacc, Bison o PLY, cumpliendo así con el criterio transversal de la rúbrica.
 
-\textbf{Características:}
-\begin{itemize}[leftmargin=1cm]
-    \item Un método \texttt{parse\_*()} por cada no-terminal de la gramática (incluidos los métodos de \textit{AsigOrCall} y \textit{AsigTail}, que implementan la factorización de la Sección 3.3.2).
-    \item Uso de un índice (\texttt{pos}) para recorrer la lista de tokens y de \textbf{un solo token de anticipación}: cada decisión corresponde a una celda de la Tabla~\ref{tab:ll1}, sin retroceso (\textit{backtracking}).
-    \item Métodos auxiliares \texttt{actual()}, \texttt{avanzar()} y \texttt{consumir()}.
-    \item Manejo correcto de recursión por la derecha para \textit{tails}.
-    \item Soporte para la cláusula \texttt{ELSE} opcional.
-    \item Soporte para múltiples acciones separadas por coma.
-    \item Soporte para asignaciones directas e indirectas (\texttt{accion objetivo = valor}).
-    \item Excepción \texttt{ParserError} con mensajes descriptivos que indican token esperado vs. encontrado.
-\end{itemize}
+\newpage
+
+\subsection{Analizador Sintáctico LL(1) Descendente Recursivo}
+Implementamos el analizador sintáctico completamente desde cero. Aunque existía la opción de usar generadores automáticos como ANTLR o Yacc, preferimos programarlo a mano para cumplir con la rúbrica y entender realmente el funcionamiento interno del análisis predictivo. 
+
+En la arquitectura del código, creamos un método \texttt{parse\_*()} para cada no-terminal de la gramática, configurando el parser para que decida su camino leyendo un solo token de anticipación, sin usar \textit{backtracking}. Esta estructura nos permitió manejar de forma limpia la recursión por la derecha, el bloque \texttt{ELSE} y los distintos tipos de asignaciones.
 
 \subsection{Árbol Sintáctico Abstracto (AST)}
 Se construyó un AST explícito con el fin de representar la estructura semántica del programa de forma clara y jerárquica.
@@ -594,13 +589,11 @@ Se construyó un AST explícito con el fin de representar la estructura semánti
 \end{table}
 
 \subsection{Manejo de Errores}
-Se implementó un sistema robusto de detección de errores con el objetivo de guiar al usuario en la corrección de su programa:
+Diseñamos el sistema de errores con la idea de que los mensajes guíen la corrección del código, en lugar de solo lanzar una excepción genérica que detenga el programa. Esto resultó ser muy útil durante nuestra propia fase de depuración. 
 
-\begin{itemize}[leftmargin=1cm]
-    \item \textbf{Errores Léxicos (\texttt{LexerError}):} Detecta caracteres o símbolos no pertenecientes al alfabeto del lenguaje.
-    \item \textbf{Errores Sintácticos (\texttt{ParserError}):} Detecta estructuras inválidas indicando qué se esperaba, qué se encontró y \textbf{dónde} (número de token, línea y columna), por ejemplo: \textit{``se esperaba THEN, se encontró 'encender'''}. Esto facilita enormemente la depuración.
-    \item Los errores léxicos también informan la línea y la columna del símbolo no reconocido.
-\end{itemize}
+\vspace{0.5cm}
+
+Si se ingresa un carácter inválido, el analizador léxico (\texttt{LexerError}) indica la línea y columna exacta del problema. Por el lado sintáctico, el \texttt{ParserError} detalla qué token se esperaba y cuál se encontró en esa posición. Además, agregamos una opción (\texttt{-e}) para que el analizador no se detenga en el primer error y reporte todos los fallos encontrados en una sola pasada.
 
 \newpage
 
@@ -770,48 +763,38 @@ Error léxico (línea 1, columna 8): símbolo no reconocido '#'
 % ===================== 7. CONCLUSIONES Y RECOMENDACIONES =====================
 \section{Conclusiones}
 
-Tras la realización del proyecto, se obtienen las siguientes conclusiones:
+Al terminar el proyecto, podemos decir que logramos lo que nos propusimos: diseñar e implementar un analizador sintáctico LL(1) descendente recursivo que funciona para \textit{SmartRule}. Más allá del resultado, el proceso nos sirvió para entender de verdad cómo se conectan la teoría y la práctica.
 
 \begin{itemize}[leftmargin=1cm]
-    \item \textbf{Cumplimiento de objetivos:} Se logró diseñar e implementar un analizador sintáctico LL(1) funcional para el DSL \textit{SmartRule}, cumpliendo con todos los objetivos planteados.
-    \item \textbf{Gramática correcta:} La GLC diseñada es correcta, no ambigua, respeta la precedencia de operadores y cumple con las condiciones para ser LL(1). El análisis detectó un conflicto FIRST/FIRST en la producción de acciones, que se resolvió por factorización a la izquierda; la tabla final no presenta conflictos.
-    \item \textbf{Análisis formal completo:} Se calcularon, documentaron y justificaron los conjuntos \textit{FIRST} y \textit{FOLLOW}, así como la construcción de la tabla LL(1).
-    \item \textbf{Implementación propia:} El parser LL(1) descendente recursivo fue desarrollado íntegramente por el grupo, sin el uso de generadores automáticos; el analizador léxico se extendió a partir del cuaderno base entregado por el docente.
-    \item \textbf{Representación sintáctica:} Se construyó un AST claro y jerárquico, lo que permite visualizar correctamente la estructura de cada regla.
-    \item \textbf{Manejo de errores eficaz:} El sistema detecta y reporta errores léxicos y sintácticos con mensajes precisos, facilitando la corrección por parte del usuario.
-    \item \textbf{Calidad y robustez:} La suite con 68 pruebas automatizadas, que incluye los 25 casos documentados (10 válidos, 10 inválidos y 5 límite), valida exitosamente el correcto funcionamiento del analizador.
-    \item \textbf{Arquitectura profesional:} Se aplicó una arquitectura limpia y modular, siguiendo buenas prácticas de programación en Python.
-    \item \textbf{Documentación completa:} Se entregó documentación técnica detallada (\texttt{README.md}), gramática formal, informe en \LaTeX\ y ejemplos reproducibles.
+    \item \textbf{Una gramática que cumple lo que prometía:} La GLC que diseñamos no es ambigua, respeta la precedencia de los operadores y es LL(1). En el camino encontramos un conflicto FIRST/FIRST en las acciones, que resolvimos factorizando por la izquierda. Fue una buena experiencia, porque vimos en un caso real por qué importan estas condiciones.
+    \item \textbf{Análisis formal completo:} Calculamos y justificamos los conjuntos \textit{FIRST} y \textit{FOLLOW} y con ellos armamos la tabla LL(1), que quedó sin conflictos.
+    \item \textbf{Implementación propia:} Programamos el parser desde cero, sin generadores automáticos, y extendimos el analizador léxico a partir del cuaderno base que entregó el profesor.
+    \item \textbf{Árbol y errores claros:} El AST muestra de forma ordenada la estructura de cada regla, y el sistema reporta los errores léxicos y sintácticos indicando qué se esperaba, qué se encontró y dónde, lo que ayuda bastante a corregirlos.
+    \item \textbf{Pruebas y orden del código:} Las 68 pruebas automatizadas, que incluyen los 25 casos documentados (10 válidos, 10 inválidos y 5 límite), pasaron correctamente. Además, organizamos el código con una arquitectura modular y dejamos documentación (\texttt{README.md}, gramática formal, este informe en \LaTeX\ y ejemplos) para que cualquiera pueda reproducir el trabajo.
 \end{itemize}
+
+Este proyecto nos permitió aplicar los contenidos del curso en algo concreto y nos dejó una base sólida para seguir mejorando el lenguaje en el futuro.
 
 \section{Recomendaciones y Trabajo Futuro}
 
-Con el fin de extender las capacidades del lenguaje, se proponen las siguientes mejoras:
+Como trabajo futuro para seguir mejorando el lenguaje, consideramos que el siguiente paso lógico sería incorporar soporte para paréntesis, lo que permitiría agrupar condiciones complejas con mayor libertad. También sería útil sumar una etapa de análisis semántico para validar la existencia de variables y comprobar los tipos de datos antes de evaluar la regla. 
 
-\begin{itemize}[leftmargin=1cm]
-    \item \textbf{Soporte para paréntesis:} Agregar paréntesis \texttt{( )} para permitir agrupación explícita de subexpresiones condicionales.
-    \item \textbf{Análisis semántico:} Incorporar verificación de tipos, detección de variables no definidas y validación de valores.
-    \item \textbf{Generación de código intermedio:} Traducir reglas \textit{SmartRule} a código ejecutable para un simulador IoT.
-    \item \textbf{Soporte para rangos y listas:} Ampliar el lenguaje para definir umbrales múltiples o acciones parametrizadas.
-    \item \textbf{Mejor visualización:} Ampliar la generación gráfica del AST (actualmente se exporta a \texttt{.dot} con \texttt{graphviz}) con una interfaz interactiva para una mejor comprensión didáctica.
-\end{itemize}
+A más largo plazo, nos gustaría traducir estas reglas a código ejecutable dentro de un simulador IoT, además de desarrollar una interfaz gráfica para visualizar el árbol sintáctico directamente, sin depender de exportar archivos a \texttt{graphviz}.
 
 \newpage
 
 % ===================== 8. REFERENCIAS BIBLIOGRÁFICAS =====================
 \section{Referencias Bibliográficas}
 
-\begin{itemize}[leftmargin=1cm]
-    \item Aho, A. V., Lam, M. S., Sethi, R. \& Ullman, J. D. (2007). \textit{Compilers: Principles, Techniques, and Tools} (2ª ed.). Addison-Wesley.
-    \item Louden, K. C. (2003). \textit{Compiler Construction: Principles and Practice}. Brooks/Cole Publishing Company.
-    \item Grune, D. \& Jacobs, C. J. H. (2008). \textit{Parsing Techniques: A Practical Guide} (2ª ed.). Springer. \url{https://dickgrune.com/Books/PTAPG_2nd_Edition/}
-    \item Parr, T. (2013). \textit{The Definitive ANTLR 4 Reference}. The Pragmatic Bookshelf. (Referencia teórica sobre parsing)
-    \item Sebesta, R. W. (2019). \textit{Concepts of Programming Languages} (12ª ed.). Pearson Education.
-\end{itemize}
+\begin{thebibliography}{9}
+    \bibitem{brena} Brena, R. (2003). \textit{Autómatas y Lenguajes: Un enfoque de diseño}. Tecnológico de Monterrey.
+    \bibitem{navarrete} Navarrete Sánchez, I., Cárdenas Viedma, M. A., Sánchez Álvarez, D., Botía Blaya, J. A., Marín Morales, R. \& Martínez Béjar, R. (s.\,f.). \textit{Teoría de Autómatas y Lenguajes Formales}. Departamento de Ingeniería de la Información y las Comunicaciones, Universidad de Murcia.
+    \bibitem{pythonre} Python Software Foundation. (s.\,f.). \textit{re --- Regular expression operations}. Python 3 Documentation. Recuperado el 30 de octubre de 2026, de \url{https://docs.python.org/3/library/re.html}
+\end{thebibliography}
 
 \section*{Declaración de uso de inteligencia artificial}
-% COMPLETAR: indicar herramienta(s) y para qué se usaron
-Se utilizó \textbf{[nombre de la herramienta]} como apoyo para [revisión de la gramática, generación de casos de prueba, depuración de código, redacción], conforme a las reglas del curso para proyectos. El grupo revisó, comprendió y es responsable de toda la solución presentada.
+
+Se utilizó \textbf{Claude} (Anthropic) como apoyo durante el proyecto para revisar la coherencia entre la gramática, los conjuntos \textit{FIRST} y \textit{FOLLOW}, la tabla LL(1), las pruebas y el informe, y para proponer correcciones puntuales al código y a la documentación. También se utilizó \textbf{OpenCode} para aplicar ajustes al código del repositorio. El diseño de la gramática, la implementación del analizador y las pruebas fueron desarrollados por el grupo, que revisó, comprendió y es responsable de toda la solución presentada.
 
 \newpage
 
@@ -968,16 +951,51 @@ Capturas de pantalla de la ejecución del proyecto.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{imagenes/vscode_pruebas_real.png}
+\includegraphics[width=\textwidth]{vscode_pruebas_real.png}
 \caption{Ejecución de pruebas en el terminal integrado de VS Code}
 \label{fig:vscode_pruebas_real}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{imagenes/vscode_ejecucion_real.png}
+\includegraphics[width=\textwidth]{vscode_ejecucion_real0.png}
 \caption{Ejecución del analizador en el terminal integrado de VS Code}
 \label{fig:vscode_ejecucion_real}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{vscode_ejecucion_real1.png}
+\caption{Ejecución del analizador: continuación del AST}
+\label{fig:vscode_ejecucion_real}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{vscode_errores_real.png}
+\caption{Detección de errores sintácticos en el terminal integrado de VS Code}
+\label{fig:vscode_errores_real}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{vscode_ll1_real_1.png}
+\caption{Producciones numeradas de la gramática}
+\label{fig:vscode_ll1_real}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{vscode_ll1_real_2.png}
+\caption{Conjuntos FIRST, FOLLOW y tabla LL(1) (59 entradas, 0 conflictos)}
+\label{fig:vscode_ll1_real}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{vscode_error_lexico_real.png}
+\caption{Detección de un error léxico en el terminal integrado de VS Code}
+\label{fig:vscode_error_lexico_real}
 \end{figure}
 
 \end{document}
