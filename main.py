@@ -139,7 +139,8 @@ def main():
             try:
                 with open(args.archivo, 'r', encoding='utf-8') as f:
                     entrada = f.read()
-                analizar(entrada, args.tokens, args.ast or True, todos_errores=args.todos_errores)
+                # el AST se muestra siempre; -a se mantiene por compatibilidad
+                analizar(entrada, args.tokens, True, todos_errores=args.todos_errores)
             except FileNotFoundError:
                 print(f"Error: No se encontró el archivo {args.archivo}")
                 sys.exit(1)
@@ -149,7 +150,8 @@ def main():
         try:
             with open(args.archivo, 'r', encoding='utf-8') as f:
                 entrada = f.read()
-            analizar(entrada, args.tokens, args.ast or True, todos_errores=args.todos_errores)
+            # el AST se muestra siempre; -a se mantiene por compatibilidad
+            analizar(entrada, args.tokens, True, todos_errores=args.todos_errores)
         except FileNotFoundError:
             print(f"Error: No se encontró el archivo {args.archivo}")
             sys.exit(1)

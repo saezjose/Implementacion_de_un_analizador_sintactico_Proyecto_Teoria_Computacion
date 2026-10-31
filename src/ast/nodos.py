@@ -84,7 +84,7 @@ class Literal(Condicion):
     def __init__(self, valor, tipo):
         super().__init__()
         self.valor = valor
-        self.tipo = tipo  # NUM, TRUE, FALSE
+        self.tipo = tipo  # NUM, BOOL
 
 
 class Identificador(Condicion):

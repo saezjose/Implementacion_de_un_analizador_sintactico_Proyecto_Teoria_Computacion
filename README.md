@@ -98,6 +98,7 @@ Error sintáctico (token 4, línea 1, columna 20): se esperaba un factor (NUM, I
 - `docs/tabla_casos.md`: casos de prueba documentados
 - `docs/informe_latex/`: informe en LaTeX
 - `tests/`: suite de 68 pruebas (incluye los 25 casos del informe: V1-V10, I1-I10, L1-L5)
+- `docs/tabla_casos.md` documenta los 32 casos de `tests/casos.py` (IDs 1–32). El informe usa una numeración propia de 25 casos (V1–V10, I1–I10, L1–L5), cubiertos por `tests/test_casos_informe.py`.
 
 ## 7. Autoría y aclaraciones
 

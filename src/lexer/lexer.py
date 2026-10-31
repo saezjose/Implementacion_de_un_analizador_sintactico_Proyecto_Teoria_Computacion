@@ -111,6 +111,7 @@ def analizador_lexico(cadena):
             continue
 
         elif tipo == 'ID' and lexema.upper() in palabras_reservadas:
+            # Las palabras reservadas no distinguen mayúsculas de minúsculas
             tipo = lexema.upper()
 
         elif tipo == 'ERROR':

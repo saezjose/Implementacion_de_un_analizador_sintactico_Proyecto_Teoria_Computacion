@@ -12,7 +12,7 @@
 \usepackage{float}
 \usepackage{longtable}
 \usepackage{fancyhdr}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{enumitem}
 
 \geometry{margin=2.5cm}
@@ -312,7 +312,7 @@ Las producciones se muestran agrupadas por no terminal; en la Tabla~\ref{tab:sel
 \subsection{Análisis y Transformaciones de la Gramática}
 
 \subsubsection{Recursión Izquierda}
-Tras el análisis de las producciones, verificamos que la gramática \textbf{no presenta recursión izquierda}, ni directa ni indirecta (comprobado construyendo el grafo de primeros símbolos de cada no terminal y verificando que no tiene ciclos). Para el caso de listas (reglas, acciones, operadores lógicos), se empleó \textbf{recursión por la derecha} mediante las reglas \textit{Tail} (\texttt{OrTail}, \texttt{AndTail}, \texttt{AccionTail}), lo cual es idóneo para un parser LL(1) descendente recursivo.
+Tras el análisis de las producciones, verificamos que la gramática \textbf{no presenta recursión izquierda}, ni directa ni indirecta (verificado por inspección de las producciones: ningún no terminal puede derivar una forma sentencial que comience con él mismo). Para el caso de listas (reglas, acciones, operadores lógicos), se empleó \textbf{recursión por la derecha} mediante las reglas \textit{Tail} (\texttt{OrTail}, \texttt{AndTail}, \texttt{AccionTail}), lo cual es idóneo para un parser LL(1) descendente recursivo.
 
 \subsubsection{Factorización por la Izquierda}
 Durante el análisis se detectó un \textbf{conflicto FIRST/FIRST} en la producción de acciones. La versión inicial de la gramática era:
@@ -416,7 +416,7 @@ AsigTail & \{ELSE, COMA, PUNTO\_COMA\}\\ \hline
 
 \subsection{Tabla LL(1) y Verificación de Conflictos}
 \label{sec:ll1}
-Para cada producción $A \to \alpha$ se define su \textit{conjunto de selección}: $FIRST(\alpha) \setminus \{\epsilon\}$, más $FOLLOW(A)$ cuando $\epsilon \in FIRST(\alpha)$. La entrada $M[A,a]$ contiene la producción cuyo conjunto de selección incluye al terminal  $a$~\cite[Cap.~5, \S5.2.1--5.2.4, pp.~117--122]{navarrete}. La Tabla~\ref{tab:select} numera las producciones y entrega sus conjuntos de selección, y la Tabla~\ref{tab:ll1} muestra la tabla predictiva resultante.
+Para cada producción $A \to \alpha$ se define su \textit{conjunto de selección}: $FIRST(\alpha) \setminus \{\epsilon\}$, más $FOLLOW(A)$ cuando $\epsilon \in FIRST(\alpha)$. La entrada $M[A,a]$ contiene la producción cuyo conjunto de selección incluye al terminal  $a$~\cite[Cap.~5]{navarrete}. La Tabla~\ref{tab:select} numera las producciones y entrega sus conjuntos de selección, y la Tabla~\ref{tab:ll1} muestra la tabla predictiva resultante.
 
 {\small
 \begin{longtable}{|c|>{\raggedright\arraybackslash}p{7.2cm}|>{\raggedright\arraybackslash}p{5.2cm}|}
@@ -704,7 +704,7 @@ Las pruebas automatizadas fueron ejecutadas con \texttt{unittest} desde el termi
 \textbf{Resultado:} \texttt{Ran 68 tests} \dots\ \texttt{OK} -- todas las pruebas pasaron exitosamente.
 
 \subsection{Ejemplo de Salida del Analizador}
-Al analizar el archivo \texttt{ejemplos/validos\_1.sr} (capturas en la Figura~\ref{fig:vscode_ejecucion_real}, Anexo~E), el sistema confirma el éxito del análisis:
+Al analizar el archivo \texttt{ejemplos/validos\_1.sr} (capturas en las Figuras~\ref{fig:vscode_ejecucion_real} y~\ref{fig:vscode_ejecucion_real_cont}, Anexo~E), el sistema confirma el éxito del análisis:
 
 \begin{lstlisting}[style=grammartyle, caption={Salida exitosa del analizador}]
 ============================================================
@@ -967,7 +967,7 @@ Capturas de pantalla de la ejecución del proyecto.
 \centering
 \includegraphics[width=\textwidth]{vscode_ejecucion_real1.png}
 \caption{Ejecución del analizador: continuación del AST}
-\label{fig:vscode_ejecucion_real}
+\label{fig:vscode_ejecucion_real_cont}
 \end{figure}
 
 \begin{figure}[H]
