@@ -225,7 +225,7 @@ donde:
     \item $\Sigma_{S} = \{\texttt{\textgreater},\ \texttt{\textless},\ \texttt{=},\ \texttt{!},\ \texttt{,},\ \texttt{;}\}$: símbolos de operadores y separadores.
     \item $\Sigma_{W} = \{\text{espacio},\ \text{tabulación},\ \text{salto de línea},\ \text{retorno de carro}\}$: separadores ignorados.
 \end{itemize}
-Cualquier otro carácter (por ejemplo \texttt{\#} o \texttt{@}) produce un error léxico. Los lexemas se agrupan en las categorías de la Tabla~\ref{tab:tokens} y el analizador sintáctico trabaja con los \textit{terminales} \texttt{ID}, \texttt{NUM}, \texttt{OP\_REL}, \texttt{IGUAL}, \texttt{COMA}, \texttt{PUNTO\_COMA}, las palabras reservadas y el marcador de fin de entrada \texttt{\$}.
+El símbolo \texttt{!} solo es válido como parte de \texttt{!=}. Cualquier otro carácter (por ejemplo \texttt{\#} o \texttt{@}) produce un error léxico. Los lexemas se agrupan en las categorías de la Tabla~\ref{tab:tokens} y el analizador sintáctico trabaja con los \textit{terminales} \texttt{ID}, \texttt{NUM}, \texttt{OP\_REL}, \texttt{IGUAL}, \texttt{COMA}, \texttt{PUNTO\_COMA}, las palabras reservadas y el marcador de fin de entrada \texttt{\$}.
 
 \subsection{Ejemplos de Programas}
 
@@ -267,7 +267,7 @@ La Tabla~\ref{tab:ext} indica dónde se refleja cada construcción: producciones
 \endfirsthead \hline
 \endhead
 Negación \texttt{NOT} (prefija, anidable) & 13 & $M[\mathit{NotExpr},\mathtt{NOT}]$ & V3, V5, V9, L3\\ \hline
-Cláusula alternativa \texttt{ELSE} & 4, 5 & $M[\mathit{ElsePart},\mathtt{ELSE}]$, $M[\mathit{ElsePart},\mathtt{PUNTO\_COMA}]$ & V2, V8, I9, L4\\ \hline
+Cláusula alternativa \texttt{ELSE} & 4, 5 & $M[\mathit{ElsePart},\mathtt{ELSE}]$, $M[\mathit{ElsePart},\mathtt{PUNTO\_COMA}]$ & V2, V8, I9\\ \hline
 Múltiples acciones separadas por coma & 23, 24 & $M[\mathit{AccionTail},\mathtt{COMA}]$, $M[\mathit{AccionTail},\mathtt{ELSE}]$, $M[\mathit{AccionTail},\mathtt{PUNTO\_COMA}]$ & V2, V4, V10, I6, I10\\ \hline
 Acciones con argumento, objeto y asignación & 25--33 & Todas las celdas de $\mathit{Accion}$, $\mathit{AsigOrCall}$ y $\mathit{AsigTail}$ (Tabla~\ref{tab:ll1}) & V1, V4, V6, V8\\ \hline
 \end{longtable}
@@ -543,7 +543,7 @@ El analizador léxico fue tomado como base del cuaderno \texttt{anlizador\_lexic
    
     \item Reconocimiento de operadores relacionales compuestos (\texttt{>=}, \texttt{<=}, \texttt{==}, \texttt{!=}).
     \item Soporte para \texttt{=} (\texttt{IGUAL}) y \texttt{,} (\texttt{COMA}).
-    \item Clasificación automática de palabras reservadas (\texttt{WHEN}, \texttt{THEN}, \texttt{ELSE}, \texttt{AND}, \texttt{OR}, \texttt{NOT}, \texttt{TRUE}, \texttt{FALSE}).
+    \item Clasificación automática de palabras reservadas (\texttt{WHEN}, \texttt{THEN}, \texttt{ELSE}, \texttt{AND}, \texttt{OR}, \texttt{NOT}, \texttt{TRUE}, \texttt{FALSE}); no distinguen mayúsculas de minúsculas (\texttt{when} equivale a \texttt{WHEN}).
     \item Ignorado de espacios, tabulaciones y saltos de línea.
     \item Detección de símbolos no reconocidos con excepción \texttt{LexerError}.
     \item Adición automática del token \texttt{EOF} (\$) para facilitar el análisis sintáctico.
@@ -759,6 +759,8 @@ Entrada: WHEN x # 3 THEN a;
 Error léxico (línea 1, columna 8): símbolo no reconocido '#'
 \end{lstlisting}
 
+En la Figura~\ref{fig:vscode_errores_real} (Anexo E) el error de la línea 7 se reporta con \texttt{'WHEN'} y no con <<fin de la entrada>>, porque en ese archivo la regla sin \texttt{;} está seguida de otra regla; el caso I7 de la Tabla~\ref{tab:casos} se evalúa de forma aislada.
+
 \newpage
 
 % ===================== 7. CONCLUSIONES Y RECOMENDACIONES =====================
@@ -795,7 +797,7 @@ A más largo plazo, nos gustaría traducir estas reglas a código ejecutable den
 
 \section*{Declaración de uso de inteligencia artificial}
 
-Se utilizó \textbf{Claude} (Anthropic) como apoyo durante el proyecto para revisar la coherencia entre la gramática, los conjuntos \textit{FIRST} y \textit{FOLLOW}, la tabla LL(1), las pruebas y el informe, y para proponer correcciones puntuales al código y a la documentación. También se utilizó \textbf{OpenCode} para aplicar ajustes al código del repositorio. El diseño de la gramática, la implementación del analizador y las pruebas fueron desarrollados por el grupo, que revisó, comprendió y es responsable de toda la solución presentada.
+Se utilizó Claude (Anthropic) como apoyo durante el proyecto para: generar y estructurar ideas, redactar y revisar partes del texto de este informe, revisar la coherencia entre la gramática, los conjuntos FIRST y FOLLOW, la tabla LL(1), las pruebas y el informe, y proponer correcciones al código y a la documentación. También se utilizó OpenCode para aplicar ajustes al código y ordenar el repositorio. El grupo revisó, comprendió y es responsable de todo el contenido presentado, y la relación entre la gramática y cada parte del código.
 
 \newpage
 
@@ -989,7 +991,7 @@ Capturas de pantalla de la ejecución del proyecto.
 \centering
 \includegraphics[width=0.9\textwidth]{vscode_ll1_real_2.png}
 \caption{Conjuntos FIRST, FOLLOW y tabla LL(1) (59 entradas, 0 conflictos)}
-\label{fig:vscode_ll1_real}
+\label{fig:vscode_ll1_real_2}
 \end{figure}
 
 \begin{figure}[H]
