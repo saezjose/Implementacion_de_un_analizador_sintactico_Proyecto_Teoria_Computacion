@@ -10,9 +10,7 @@
 \endhead
 \hline
 \endfoot
-\texttt{Accion} &  &  &  &  & ID AccionResto &  &  &  &  &  &  &  &  &  \\ 
-\hline
-\texttt{AccionResto} &  & $\epsilon$ & $\epsilon$ & FALSE & ID ArgResto & = Factor &  & NUM &  &  & $\epsilon$ &  & TRUE &  \\ 
+\texttt{Accion} &  &  &  &  & ID AsigOrCall &  &  &  &  &  &  &  &  &  \\ 
 \hline
 \texttt{AccionTail} &  & , Accion AccionTail & $\epsilon$ &  &  &  &  &  &  &  & $\epsilon$ &  &  &  \\ 
 \hline
@@ -20,7 +18,9 @@
 \hline
 \texttt{AndTail} & AND NotExpr AndTail &  &  &  &  &  &  &  &  & $\epsilon$ &  & $\epsilon$ &  &  \\ 
 \hline
-\texttt{ArgResto} &  & $\epsilon$ & $\epsilon$ &  &  & = Factor &  &  &  &  & $\epsilon$ &  &  &  \\ 
+\texttt{AsigOrCall} &  & $\epsilon$ & $\epsilon$ & FALSE & ID AsigTail & = Factor &  & NUM &  &  & $\epsilon$ &  & TRUE &  \\ 
+\hline
+\texttt{AsigTail} &  & $\epsilon$ & $\epsilon$ &  &  & = Factor &  &  &  &  & $\epsilon$ &  &  &  \\ 
 \hline
 \texttt{Cond} &  &  &  & OrExpr & OrExpr &  & OrExpr & OrExpr &  &  &  &  & OrExpr &  \\ 
 \hline

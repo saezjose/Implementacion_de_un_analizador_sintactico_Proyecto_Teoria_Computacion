@@ -26,14 +26,14 @@ class TestGramaticaLL1(unittest.TestCase):
         first = calcular_first()
         follow = calcular_follow(first)
         self.assertIn('ID', first['Accion'])
-        asig = first.get('AsigOrCall', first.get('AccionResto', set()))
+        asig = first['AsigOrCall']
         self.assertIn('IGUAL', asig)
         self.assertIn('ID', asig)
         self.assertTrue('epsilon' in asig or '\u03b5' in asig)
         self.assertIn('COMA', follow['Accion'])
         self.assertIn('ELSE', follow['Accion'])
         self.assertIn('PUNTO_COMA', follow['Accion'])
-        asig_f = follow.get('AsigOrCall', follow.get('AccionResto', set()))
+        asig_f = follow['AsigOrCall']
         self.assertIn('COMA', asig_f)
         self.assertIn('ELSE', asig_f)
         self.assertIn('PUNTO_COMA', asig_f)
